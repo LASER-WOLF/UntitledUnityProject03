@@ -21,6 +21,56 @@ public static class MeshGen
         return mesh;
     }
 
+
+    public static MeshGenItem MakeTerrain(Texture2D hMap, Chunk chunk, int size = 1) {
+
+        int width = hMap.width;
+        int height = hMap.height;
+        float hMapMultiplier = 1000;
+
+        List<MeshGenItem> meshGroup = new List<MeshGenItem>();
+        //int count = 0; 
+        int numVerts = 0;
+        for (int x = chunk.start.x; x < chunk.end.x; x += size) {
+            for (int z = chunk.start.y; z < chunk.end.y; z += size) {
+                if (x + size < width && z + size < height) {
+
+                    Vector2Int[] gpPos = new Vector2Int[4];
+                    gpPos[0] = new Vector2Int(x, z + size);
+                    gpPos[1] = new Vector2Int(x + size, z + size);
+                    gpPos[2] = new Vector2Int(x, z);
+                    gpPos[3] = new Vector2Int(x + size, z);
+
+                    float[] gpHeight = new float[4];
+                    gpHeight[0] = hMap.GetPixel(x, z + size).grayscale * hMapMultiplier;
+                    gpHeight[1] = hMap.GetPixel(x + size, z + size).grayscale * hMapMultiplier;
+                    gpHeight[2] = hMap.GetPixel(x, z).grayscale * hMapMultiplier;
+                    gpHeight[3] = hMap.GetPixel(x + size, z).grayscale * hMapMultiplier;
+
+                    Vector2[] gpUv = new Vector2[4];
+                    gpUv[0] = new Vector2Int(0,0);
+                    gpUv[1] = new Vector2Int(1,0);
+                    gpUv[2] = new Vector2Int(0,1);
+                    gpUv[3] = new Vector2Int(1,1);
+
+                    meshGroup.Add(MakeTerrainGp(gpPos, gpHeight, gpUv, numVerts));
+                    //numVerts += meshGroup[count].verts.Length;
+                    numVerts += 4;
+                    //count++;
+                }
+            }
+        }
+        return Combine(meshGroup);
+
+    }
+
+    public static MeshGenItem MakeTerrainGp(Vector2Int[] gpPos, float[] gpHeight, Vector2[] gpUv, int numVerts = 0, float offset = 0.0f) {
+        MeshGenItem plane = Plane(new Vector3[4] { new Vector3(gpPos[0].x, gpHeight[0] + offset, gpPos[0].y), new Vector3(gpPos[1].x, gpHeight[1] + offset, gpPos[1].y), new Vector3(gpPos[2].x, gpHeight[2] + offset, gpPos[2].y), new Vector3(gpPos[3].x, gpHeight[3] + offset, gpPos[3].y) }, numVerts);
+        plane.uv = gpUv;
+        return plane;
+    }
+
+
     public static MeshGenItem MakeTerrainDictUnit(GridPoint[,] grid, Dictionary<Vector2Int, int> dict, Quaternion rotation = new Quaternion(), float offset = 0.03f, float size = 1.0f) {
         List<MeshGenItem> meshGroup = new List<MeshGenItem>();
         int count = 0; int numVerts = 0;
@@ -151,7 +201,6 @@ public static class MeshGen
         new Vector2(0, 1),
         new Vector2(1, 1)
         };
-
         if (deform) {
             Vector3 rayStart1 = pos + new Vector3(0.0f, 100000, size);
             Vector3 rayStart2 = pos + new Vector3(size, 100000, size);
@@ -161,12 +210,11 @@ public static class MeshGen
             Ray ray2 = new Ray(rayStart2, new Vector3(0, -1, 0));
             Ray ray3 = new Ray(rayStart3, new Vector3(0, -1, 0));
             Ray ray4 = new Ray(rayStart4, new Vector3(0, -1, 0));
-            RaycastHit hit1; if (Physics.Raycast(ray1, out hit1)) { h1 = hit1.point.y - pos.y; uv[2] = hit1.textureCoord; }
-            RaycastHit hit2; if (Physics.Raycast(ray2, out hit2)) { h2 = hit2.point.y - pos.y; uv[3] = hit2.textureCoord; }
-            RaycastHit hit3; if (Physics.Raycast(ray3, out hit3)) { h3 = hit3.point.y - pos.y; uv[0] = hit3.textureCoord; }
-            RaycastHit hit4; if (Physics.Raycast(ray4, out hit4)) { h4 = hit4.point.y - pos.y; uv[1] = hit4.textureCoord; }
+            RaycastHit hit1; if (Physics.Raycast(ray1, out hit1)) { h1 = hit1.point.y - pos.y; uv[0] = hit1.textureCoord; }
+            RaycastHit hit2; if (Physics.Raycast(ray2, out hit2)) { h2 = hit2.point.y - pos.y; uv[1] = hit2.textureCoord; }
+            RaycastHit hit3; if (Physics.Raycast(ray3, out hit3)) { h3 = hit3.point.y - pos.y; uv[2] = hit3.textureCoord; }
+            RaycastHit hit4; if (Physics.Raycast(ray4, out hit4)) { h4 = hit4.point.y - pos.y; uv[3] = hit4.textureCoord; }
         }
-
         MeshGenItem plane = Plane(new Vector3[4] { new Vector3(0.0f, h1 + 0.0f + offset, size) + pos, new Vector3(size, h2 + 0.0f + offset, size) + pos, new Vector3(0.0f, h3 + 0.0f + offset, 0.0f) + pos, new Vector3(size, h4 + 0.0f + offset, 0.0f) + pos }, numVerts);
         plane.uv = uv;
         return plane;

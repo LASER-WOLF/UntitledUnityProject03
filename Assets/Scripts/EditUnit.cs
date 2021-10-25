@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class EditUnit : MonoBehaviour {
-    public ListManager listManager;
+    public DataManager dataManager;
     public UiManager uiManager;
     public MenuMain menuMain;
     
@@ -61,7 +61,7 @@ public class EditUnit : MonoBehaviour {
         maxMode = mode.Count;
         maxMesh = meshes.Count;
         maxMenu = menu.Count;
-        maxId = listManager.Units.Count;
+        maxId = dataManager.Units.Count;
         SetupScene();
         SelIdInit(selId);
     }
@@ -352,16 +352,16 @@ public class EditUnit : MonoBehaviour {
 
     void SelIdInit(int i) {
         //selMenu = 1;
-        selName = listManager.Units[i].name;
-        selMesh = listManager.Units[i].mesh;
-        selHp = listManager.Units[i].hp;
+        selName = dataManager.Units[i].name;
+        selMesh = dataManager.Units[i].mesh;
+        selHp = dataManager.Units[i].hp;
         UpdateUnitMesh(selMesh);
     }
 
     void SaveUnit(int id) {
-        listManager.Units[id].name = selName;
-        listManager.Units[id].mesh = selMesh;
-        listManager.Units[id].hp = selHp;
+        dataManager.Units[id].name = selName;
+        dataManager.Units[id].mesh = selMesh;
+        dataManager.Units[id].hp = selHp;
     }
 
     int IntIncDec(int i, int val, int max) {

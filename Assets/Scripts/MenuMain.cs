@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class MenuMain : MonoBehaviour {
     public UiManager uiManager;
-    public ListManager listManager;
+    public DataManager dataManager;
     public EditTerrain editTerrain;
     public EditUnit editUnit;
 
@@ -59,7 +59,7 @@ public class MenuMain : MonoBehaviour {
     }
 
     void SetupEditTerrainMenu() {
-        foreach (TerrainInfo terrain in listManager.Terrains) {
+        foreach (TerrainInfo terrain in dataManager.Terrains) {
             menu[1].Add(new MenuItem() { name = terrain.id.ToString("D2"), type = "sel" });
         }
     }

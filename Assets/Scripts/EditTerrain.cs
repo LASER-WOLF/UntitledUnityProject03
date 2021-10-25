@@ -6,7 +6,7 @@ using System.Linq;
 public class EditTerrain : MonoBehaviour
 {
     public TerrainManager terrainManager;
-    public ListManager listManager;
+    public DataManager dataManager;
     public UiManager uiManager;
     public MenuMain menuMain;
 
@@ -176,8 +176,8 @@ public class EditTerrain : MonoBehaviour
 
     void UpdatePreview(int id) {
         if (mode[selMode] == "grass") {
-            uiManager.SetMeshEditTerrainPreview(GrassMeshGen.Create(listManager.Grass[id], MeshGen.Create(MeshGen.MakeSquare(new Vector3(-0.5f, 0, -0.5f), 1, 1, 1))));
-            uiManager.SetMatEditTerrainPreview(Resources.Load<Material>("Grass/" + listManager.Grass[id].mat));
+            uiManager.SetMeshEditTerrainPreview(GrassMeshGen.Create(dataManager.Grass[id], MeshGen.Create(MeshGen.MakeSquare(new Vector3(-0.5f, 0, -0.5f), 1, 1, 1))));
+            uiManager.SetMatEditTerrainPreview(Resources.Load<Material>("Grass/" + dataManager.Grass[id].mat));
         }
     }
 
@@ -193,8 +193,8 @@ public class EditTerrain : MonoBehaviour
     }
 
     void AddUnit(Vector2Int gp, int id) {
-        if (!listManager.UnitsPlaced.ContainsKey(gp)) {
-            listManager.UnitsPlaced.Add(gp, id);
+        if (!dataManager.UnitsPlaced.ContainsKey(gp)) {
+            dataManager.UnitsPlaced.Add(gp, id);
         }
     }
 
@@ -205,8 +205,8 @@ public class EditTerrain : MonoBehaviour
     }
 
     void RemoveUnit(Vector2Int gp, int id) {
-        if (listManager.UnitsPlaced.ContainsKey(gp)) {
-            listManager.UnitsPlaced.Remove(gp);
+        if (dataManager.UnitsPlaced.ContainsKey(gp)) {
+            dataManager.UnitsPlaced.Remove(gp);
         }
     }
 
@@ -217,8 +217,8 @@ public class EditTerrain : MonoBehaviour
     }
 
     void EditUnit(Vector2Int gp, int id) {
-        if (listManager.UnitsPlaced.ContainsKey(gp)) {
-            listManager.UnitsPlaced[gp] = id; 
+        if (dataManager.UnitsPlaced.ContainsKey(gp)) {
+            dataManager.UnitsPlaced[gp] = id; 
         }
     }
 
@@ -232,12 +232,12 @@ public class EditTerrain : MonoBehaviour
     */
 
     void UpdateMeshUnit() {
-        unitGo.GetComponent<MeshFilter>().mesh = MeshGen.Create(MeshGen.MakeTerrainDictUnit(terrainManager.Grid, listManager.UnitsPlaced, Quaternion.Euler(0, meshRotation, 0)));
+        unitGo.GetComponent<MeshFilter>().mesh = MeshGen.Create(MeshGen.MakeTerrainDictUnit(terrainManager.Grid, dataManager.UnitsPlaced, Quaternion.Euler(0, meshRotation, 0)));
         meshRotation++;
     }
 
     void UpdateMeshUnitText() {
-        unitTextGo.GetComponent<MeshFilter>().mesh = MeshGen.Create(MeshGen.MakeTerrainDictText(terrainManager.Grid, listManager.UnitsPlaced));
+        unitTextGo.GetComponent<MeshFilter>().mesh = MeshGen.Create(MeshGen.MakeTerrainDictText(terrainManager.Grid, dataManager.UnitsPlaced));
     }
 
 
