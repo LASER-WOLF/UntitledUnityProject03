@@ -3,26 +3,19 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-public class DataManager : MonoBehaviour
-{
+public class DataManager : MonoBehaviour {
     Dictionary<int, Unit> _units = new Dictionary<int, Unit>();
     Dictionary<int, Grass> _grass = new Dictionary<int, Grass>();
-    
-    int _numEntities=9999;
 
-    List<TerrainInfo> _terrains = new List<TerrainInfo>() { 
+    int _numEntities = 9999;
+
+    List<TerrainInfo> _terrains = new List<TerrainInfo>() {
     new TerrainInfo(){ id=13 }
     };
 
     //add grassmat list
-
-    //change: store terrain id, gp, id
-
-
-    //chunkid
-    Dictionary<int, List<GrassPlaced>> _grassPlaced = new Dictionary<int, List<GrassPlaced>>();
-
-    Dictionary<Vector2Int, int> _unitsPlaced = new Dictionary<Vector2Int, int>();
+    Dictionary<Chunk, List<GrassPlaced>> _grassPlaced = new Dictionary<Chunk, List<GrassPlaced>>();
+    Dictionary<GridPoint, int> _unitsPlaced = new Dictionary<GridPoint, int>();
 
     public Dictionary<int, Grass> Grass {
         get => _grass;
@@ -39,32 +32,31 @@ public class DataManager : MonoBehaviour
         set => _terrains = value;
     }
 
-    public Dictionary<int, List<GrassPlaced>> GrassPlaced {
+    public Dictionary<Chunk, List<GrassPlaced>> GrassPlaced {
         get => _grassPlaced;
         set => _grassPlaced = value;
     }
 
-    public Dictionary<Vector2Int, int> UnitsPlaced {
+    public Dictionary<GridPoint, int> UnitsPlaced {
         get => _unitsPlaced;
         set => _unitsPlaced = value;
     }
 
-    void Awake()
-    {
+    void Awake() {
         _units = UnitsInit();
         _grass = GrassInit();
     }
 
-    public void TryAddGrassPlacedList(int chunkId) {
-        if (!GrassPlaced.ContainsKey(chunkId)) {
-            GrassPlaced.Add(chunkId, new List<GrassPlaced>());
+    public void TryAddGrassPlacedList(Chunk chunk) {
+        if (!GrassPlaced.ContainsKey(chunk)) {
+            GrassPlaced.Add(chunk, new List<GrassPlaced>());
         }
     }
 
-    public void TryRemoveGrassPlacedList(int chunkId) {
-        if (GrassPlaced.ContainsKey(chunkId)) {
-            if (GrassPlaced[chunkId].Count == 0) {
-                GrassPlaced.Remove(chunkId);
+    public void TryRemoveGrassPlacedList(Chunk chunk) {
+        if (GrassPlaced.ContainsKey(chunk)) {
+            if (GrassPlaced[chunk].Count == 0) {
+                GrassPlaced.Remove(chunk);
             }
         }
     }
@@ -72,7 +64,7 @@ public class DataManager : MonoBehaviour
     Dictionary<int, Grass> GrassInit() {
         Dictionary<int, Grass> grassEmpty = new Dictionary<int, Grass>();
         for (int x = 1; x <= _numEntities; x++) {
-            
+
             //temp
             //grassEmpty.Add(x, new Grass() { id = x, mat = "grassDefault", settings = grassSettings });
             string mat = "grass" + x.ToString("D4");
@@ -84,7 +76,7 @@ public class DataManager : MonoBehaviour
         grassEmpty[3].mat = "grass0003";
         grassEmpty[4].mat = "grass0004";
         grassEmpty[5].mat = "grass0005";
-        
+
         grassEmpty[6].mat = "moss0001";
         //grassEmpty[6].height = 0.25f;
         //grassEmpty[6].numLayers = 5;

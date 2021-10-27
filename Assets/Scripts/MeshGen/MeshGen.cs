@@ -21,7 +21,7 @@ public static class MeshGen
         return mesh;
     }
 
-
+    /*
     public static MeshGenItem MakeTerrain(Texture2D hMap, Chunk chunk, int size = 1) {
 
         int width = hMap.width;
@@ -32,7 +32,7 @@ public static class MeshGen
         //int count = 0; 
         int numVerts = 0;
         for (int x = chunk.start.x; x < chunk.end.x; x += size) {
-            for (int z = chunk.start.y; z < chunk.end.y; z += size) {
+            for (int z = chunk.start.z; z < chunk.end.z; z += size) {
                 if (x + size < width && z + size < height) {
 
                     Vector2Int[] gpPos = new Vector2Int[4];
@@ -63,6 +63,7 @@ public static class MeshGen
         return Combine(meshGroup);
 
     }
+    */
 
     public static MeshGenItem MakeTerrainGp(Vector2Int[] gpPos, float[] gpHeight, Vector2[] gpUv, int numVerts = 0, float offset = 0.0f) {
         MeshGenItem plane = Plane(new Vector3[4] { new Vector3(gpPos[0].x, gpHeight[0] + offset, gpPos[0].y), new Vector3(gpPos[1].x, gpHeight[1] + offset, gpPos[1].y), new Vector3(gpPos[2].x, gpHeight[2] + offset, gpPos[2].y), new Vector3(gpPos[3].x, gpHeight[3] + offset, gpPos[3].y) }, numVerts);
@@ -75,7 +76,7 @@ public static class MeshGen
         List<MeshGenItem> meshGroup = new List<MeshGenItem>();
         int count = 0; int numVerts = 0;
         foreach (Vector2Int gp in dict.Keys) {
-                    Vector3 pos = grid[gp.x, gp.y].position;
+                    Vector3 pos = grid[gp.x, gp.y].posCenter;
                     meshGroup.Add(ModRotate(MakeDiamond(pos, size, size, size, 0, offset, 0, numVerts),rotation,pos+new Vector3(0.5f,0,0.5f)));
                     numVerts += meshGroup[count].verts.Length;
                     count++;
@@ -87,7 +88,7 @@ public static class MeshGen
         List<MeshGenItem> meshGroup = new List<MeshGenItem>();
         int count = 0; int numVerts = 0;
         foreach (GrassPlaced grassPlaced in list) {
-            Vector3 pos = grid[grassPlaced.gp.x, grassPlaced.gp.y].position;
+            Vector3 pos = grassPlaced.gp.posCenter;
             meshGroup.Add(MakeTerrainGpSquare(pos, offset, 1, numVerts));
             numVerts += meshGroup[count].verts.Length;
             count++;
@@ -99,10 +100,13 @@ public static class MeshGen
         List<MeshGenItem> meshGroup = new List<MeshGenItem>();
         int count = 0; int numVerts = 0;
         for (int x = chunk.start.x; x < chunk.end.x; x+=size) {
-            for (int z = chunk.start.y; z < chunk.end.y; z+=size) {
+            for (int z = chunk.start.z; z < chunk.end.z; z+=size) {
                 if (x < grid.GetLength(0) && z < grid.GetLength(1)) {
                     if (grid[x, z].inBounds) {
-                        meshGroup.Add(MakeTerrainGpSquare(grid[x, z].position, 0, size, numVerts));
+                        int currentSize = size;
+                        if (x+size > grid.GetLength(0)){ currentSize = grid.GetLength(0) - (x + size); }
+                        if (z+size > grid.GetLength(1)){ currentSize = grid.GetLength(1) - (z + size); }
+                        meshGroup.Add(MakeTerrainGpSquare(grid[x, z].posCenter, 0, currentSize, numVerts));
                         numVerts += meshGroup[count].verts.Length;
                         count++;
                     }
@@ -116,7 +120,7 @@ public static class MeshGen
         List<MeshGenItem> meshGroup = new List<MeshGenItem>();
         int count = 0; int numVerts = 0;
         foreach (Vector2Int gp in dict.Keys) {
-            Vector3 pos = grid[gp.x, gp.y].position;
+            Vector3 pos = grid[gp.x, gp.y].posCenter;
             Quaternion rotation = Camera.main.transform.rotation;
             MeshGenItem mesh = MakeGroupAutoAlphaNum(dict[gp].ToString("D4"), Vector3.zero, 0.25f, 0.25f, 0.25f, 1, 0, 0, 0, numVerts);
             mesh = ModFlipYZ(mesh);
@@ -134,9 +138,9 @@ public static class MeshGen
         int count = 0; int numVerts = 0;
         for (int x = 0; x < grid.GetLength(0); x++) {
             for (int z = 0; z < grid.GetLength(1); z++) {
-                if (grid[x, z].inBounds && ((!steepMode && grid[x, z].angle <= angle) || (steepMode && grid[x, z].angle > angle))) {
-                    Quaternion rotation = Quaternion.FromToRotation(Vector3.up, grid[x, z].normal);
-                    meshGroup.Add(MakeTerrainGpDotRotated(rotation, grid[x, z].position, size, size, size, offset, numVerts));
+                if (grid[x, z].inBounds && ((!steepMode && grid[x, z].angleCenter <= angle) || (steepMode && grid[x, z].angleCenter > angle))) {
+                    Quaternion rotation = Quaternion.FromToRotation(Vector3.up, grid[x, z].normalCenter);
+                    meshGroup.Add(MakeTerrainGpDotRotated(rotation, grid[x, z].posCenter, size, size, size, offset, numVerts));
                     numVerts += meshGroup[count].verts.Length;
                     count++;
                 }
@@ -149,11 +153,11 @@ public static class MeshGen
         List<MeshGenItem> meshGroup = new List<MeshGenItem>();
         int count = 0; int numVerts = 0;
         for (int x = chunk.start.x; x < chunk.end.x; x++) {
-            for (int z = chunk.start.y; z < chunk.end.y; z++) {
+            for (int z = chunk.start.z; z < chunk.end.z; z++) {
                 if (x < grid.GetLength(0) && z < grid.GetLength(1)) {
-                    if (grid[x, z].inBounds && ((!steepMode && grid[x, z].angle <= angle) || (steepMode && grid[x, z].angle > angle))) {
-                        Quaternion rotation = Quaternion.FromToRotation(Vector3.up, grid[x, z].normal);
-                        meshGroup.Add(MakeTerrainGpDotRotated(rotation, grid[x, z].position, size, size, size, offset, numVerts));
+                    if (grid[x, z].inBounds && ((!steepMode && grid[x, z].angleCenter <= angle) || (steepMode && grid[x, z].angleCenter > angle))) {
+                        Quaternion rotation = Quaternion.FromToRotation(Vector3.up, grid[x, z].normalCenter);
+                        meshGroup.Add(MakeTerrainGpDotRotated(rotation, grid[x, z].posCenter, size, size, size, offset, numVerts));
                         numVerts += meshGroup[count].verts.Length;
                         count++;
                     }
