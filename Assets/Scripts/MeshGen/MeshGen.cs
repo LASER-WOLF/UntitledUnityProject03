@@ -21,56 +21,6 @@ public static class MeshGen
         return mesh;
     }
 
-    /*
-    public static MeshGenItem MakeTerrain(Texture2D hMap, Chunk chunk, int size = 1) {
-
-        int width = hMap.width;
-        int height = hMap.height;
-        float hMapMultiplier = 1000;
-
-        List<MeshGenItem> meshGroup = new List<MeshGenItem>();
-        //int count = 0; 
-        int numVerts = 0;
-        for (int x = chunk.start.x; x < chunk.end.x; x += size) {
-            for (int z = chunk.start.z; z < chunk.end.z; z += size) {
-                if (x + size < width && z + size < height) {
-
-                    Vector2Int[] gpPos = new Vector2Int[4];
-                    gpPos[0] = new Vector2Int(x, z + size);
-                    gpPos[1] = new Vector2Int(x + size, z + size);
-                    gpPos[2] = new Vector2Int(x, z);
-                    gpPos[3] = new Vector2Int(x + size, z);
-
-                    float[] gpHeight = new float[4];
-                    gpHeight[0] = hMap.GetPixel(x, z + size).grayscale * hMapMultiplier;
-                    gpHeight[1] = hMap.GetPixel(x + size, z + size).grayscale * hMapMultiplier;
-                    gpHeight[2] = hMap.GetPixel(x, z).grayscale * hMapMultiplier;
-                    gpHeight[3] = hMap.GetPixel(x + size, z).grayscale * hMapMultiplier;
-
-                    Vector2[] gpUv = new Vector2[4];
-                    gpUv[0] = new Vector2Int(0,0);
-                    gpUv[1] = new Vector2Int(1,0);
-                    gpUv[2] = new Vector2Int(0,1);
-                    gpUv[3] = new Vector2Int(1,1);
-
-                    meshGroup.Add(MakeTerrainGp(gpPos, gpHeight, gpUv, numVerts));
-                    //numVerts += meshGroup[count].verts.Length;
-                    numVerts += 4;
-                    //count++;
-                }
-            }
-        }
-        return Combine(meshGroup);
-
-    }
-    */
-
-    public static MeshGenItem MakeTerrainGp(Vector2Int[] gpPos, float[] gpHeight, Vector2[] gpUv, int numVerts = 0, float offset = 0.0f) {
-        MeshGenItem plane = Plane(new Vector3[4] { new Vector3(gpPos[0].x, gpHeight[0] + offset, gpPos[0].y), new Vector3(gpPos[1].x, gpHeight[1] + offset, gpPos[1].y), new Vector3(gpPos[2].x, gpHeight[2] + offset, gpPos[2].y), new Vector3(gpPos[3].x, gpHeight[3] + offset, gpPos[3].y) }, numVerts);
-        plane.uv = gpUv;
-        return plane;
-    }
-
 
     public static MeshGenItem MakeTerrainDictUnit(GridPoint[,] grid, Dictionary<Vector2Int, int> dict, Quaternion rotation = new Quaternion(), float offset = 0.03f, float size = 1.0f) {
         List<MeshGenItem> meshGroup = new List<MeshGenItem>();
@@ -84,119 +34,18 @@ public static class MeshGen
         return Combine(meshGroup);
     }
 
-    public static MeshGenItem MakeTerrainListGrass(GridPoint[,] grid, List<GrassPlaced> list, float offset = 0.001f) {
+    public static MeshGenItem MakeTerrainListGrass(GridPoint[,] grid, List<GrassPlaced> list) {
         List<MeshGenItem> meshGroup = new List<MeshGenItem>();
         int count = 0; int numVerts = 0;
         foreach (GrassPlaced grassPlaced in list) {
-            Vector3 pos = grassPlaced.gp.posCenter;
-            meshGroup.Add(MakeTerrainGpSquare(pos, offset, 1, numVerts));
+            meshGroup.Add(MakeTerrainGp(grassPlaced.gp.pos, grassPlaced.gp.uv, numVerts));
+            //meshGroup.Add(MakeTerrainGpSquare(grassPlaced.gp.pos[2], 0, 1, numVerts));
             numVerts += meshGroup[count].verts.Length;
             count++;
         }
         return Combine(meshGroup);
     }
-
-    public static MeshGenItem MakeTerrainChunk(GridPoint[,] grid, Chunk chunk, int size = 1) {
-        List<MeshGenItem> meshGroup = new List<MeshGenItem>();
-        int count = 0; int numVerts = 0;
-        for (int x = chunk.start.x; x < chunk.end.x; x+=size) {
-            for (int z = chunk.start.z; z < chunk.end.z; z+=size) {
-                if (x < grid.GetLength(0) && z < grid.GetLength(1)) {
-                    if (grid[x, z].inBounds) {
-                        int currentSize = size;
-                        if (x+size > grid.GetLength(0)){ currentSize = grid.GetLength(0) - (x + size); }
-                        if (z+size > grid.GetLength(1)){ currentSize = grid.GetLength(1) - (z + size); }
-                        meshGroup.Add(MakeTerrainGpSquare(grid[x, z].posCenter, 0, currentSize, numVerts));
-                        numVerts += meshGroup[count].verts.Length;
-                        count++;
-                    }
-                }
-            }
-        }
-        return Combine(meshGroup);
-    }
-
-    public static MeshGenItem MakeTerrainDictText(GridPoint[,] grid, Dictionary<Vector2Int, int> dict) {
-        List<MeshGenItem> meshGroup = new List<MeshGenItem>();
-        int count = 0; int numVerts = 0;
-        foreach (Vector2Int gp in dict.Keys) {
-            Vector3 pos = grid[gp.x, gp.y].posCenter;
-            Quaternion rotation = Camera.main.transform.rotation;
-            MeshGenItem mesh = MakeGroupAutoAlphaNum(dict[gp].ToString("D4"), Vector3.zero, 0.25f, 0.25f, 0.25f, 1, 0, 0, 0, numVerts);
-            mesh = ModFlipYZ(mesh);
-            mesh = ModRotate(mesh, rotation, new Vector3(0.5f, 0, 0));
-            mesh = ModOffset(mesh, pos + new Vector3(0, 2f, 0.5f));
-            meshGroup.Add(mesh);
-            numVerts += meshGroup[count].verts.Length;
-            count++;
-        }
-        return Combine(meshGroup);
-    }
-
-    public static MeshGenItem MakeTerrainGrid(GridPoint[,] grid, float angle = 0.0f, bool steepMode = false, float size = 1.0f, float offset = 0.01f) {
-        List<MeshGenItem> meshGroup = new List<MeshGenItem>();
-        int count = 0; int numVerts = 0;
-        for (int x = 0; x < grid.GetLength(0); x++) {
-            for (int z = 0; z < grid.GetLength(1); z++) {
-                if (grid[x, z].inBounds && ((!steepMode && grid[x, z].angleCenter <= angle) || (steepMode && grid[x, z].angleCenter > angle))) {
-                    Quaternion rotation = Quaternion.FromToRotation(Vector3.up, grid[x, z].normalCenter);
-                    meshGroup.Add(MakeTerrainGpDotRotated(rotation, grid[x, z].posCenter, size, size, size, offset, numVerts));
-                    numVerts += meshGroup[count].verts.Length;
-                    count++;
-                }
-            }
-        }
-        return Combine(meshGroup);
-    }
-
-    public static MeshGenItem MakeTerrainGridChunk(GridPoint[,] grid, Chunk chunk, float angle = 0.0f, bool steepMode = false, float size = 1.0f, float offset = 0.01f) {
-        List<MeshGenItem> meshGroup = new List<MeshGenItem>();
-        int count = 0; int numVerts = 0;
-        for (int x = chunk.start.x; x < chunk.end.x; x++) {
-            for (int z = chunk.start.z; z < chunk.end.z; z++) {
-                if (x < grid.GetLength(0) && z < grid.GetLength(1)) {
-                    if (grid[x, z].inBounds && ((!steepMode && grid[x, z].angleCenter <= angle) || (steepMode && grid[x, z].angleCenter > angle))) {
-                        Quaternion rotation = Quaternion.FromToRotation(Vector3.up, grid[x, z].normalCenter);
-                        meshGroup.Add(MakeTerrainGpDotRotated(rotation, grid[x, z].posCenter, size, size, size, offset, numVerts));
-                        numVerts += meshGroup[count].verts.Length;
-                        count++;
-                    }
-                }
-            }
-        }
-        return Combine(meshGroup);
-    }
-
-    public static MeshGenItem MakeTerrainGpDotRotated(Quaternion rotation, Vector3 pos = new Vector3(), float sizeX = 1.0f, float sizeY = 1.0f, float sizeZ = 1.0f, float offset = 0.01f, int numVerts = 0) {
-        return ModOffset(ModRotate(MakeTerrainGpDot(pos, sizeX, sizeY, sizeZ, (1 - sizeX) * 0.5f, 0, (1 - sizeZ) * 0.5f, numVerts), rotation, pos + new Vector3(0.5f, 0, 0.5f)), new Vector3(0, offset, 0));
-    }
-
-    public static MeshGenItem MakeTerrainGpXRotated(Quaternion rotation, Vector3 pos = new Vector3(), float sizeX = 1.0f, float sizeY = 1.0f, float sizeZ = 1.0f, float offset = 0.01f, int numVerts = 0) {
-        return ModOffset(ModRotate(MakeTerrainGpX(pos, sizeX, sizeY, sizeZ, (1 - sizeX) * 0.5f, 0, (1 - sizeZ) * 0.5f, numVerts), rotation, pos + new Vector3(0.5f, 0, 0.5f)), new Vector3(0, offset, 0));
-    }
-
-    public static MeshGenItem MakeTerrainGpX(Vector3 pos = new Vector3(), float sizeX = 1.0f, float sizeY = 1.0f, float sizeZ = 1.0f, float offsetX = 0.0f, float offsetY = 0.0f, float offsetZ = 0.0f, int numVerts = 0) {
-        List<MeshGenData> meshData = new List<MeshGenData>();
-        meshData.Add(new MeshGenData() { verts = new Vector3[4] { new Vector3(0.440f, 0.000f, 0.560f), new Vector3(0.560f, 0.000f, 0.560f), new Vector3(0.440f, 0.000f, 0.440f), new Vector3(0.560f, 0.000f, 0.440f) }, type = "plane" });
-        meshData.Add(new MeshGenData() { verts = new Vector3[4] { new Vector3(0.320f, 0.000f, 0.680f), new Vector3(0.440f, 0.000f, 0.680f), new Vector3(0.320f, 0.000f, 0.560f), new Vector3(0.440f, 0.000f, 0.560f) }, type = "plane" });
-        meshData.Add(new MeshGenData() { verts = new Vector3[4] { new Vector3(0.320f, 0.000f, 0.440f), new Vector3(0.440f, 0.000f, 0.440f), new Vector3(0.320f, 0.000f, 0.320f), new Vector3(0.440f, 0.000f, 0.320f) }, type = "plane" });
-        meshData.Add(new MeshGenData() { verts = new Vector3[4] { new Vector3(0.200f, 0.000f, 0.800f), new Vector3(0.320f, 0.000f, 0.800f), new Vector3(0.200f, 0.000f, 0.680f), new Vector3(0.320f, 0.000f, 0.680f) }, type = "plane" });
-        meshData.Add(new MeshGenData() { verts = new Vector3[4] { new Vector3(0.200f, 0.000f, 0.320f), new Vector3(0.320f, 0.000f, 0.320f), new Vector3(0.200f, 0.000f, 0.200f), new Vector3(0.320f, 0.000f, 0.200f) }, type = "plane" });
-        meshData.Add(new MeshGenData() { verts = new Vector3[4] { new Vector3(0.560f, 0.000f, 0.680f), new Vector3(0.680f, 0.000f, 0.680f), new Vector3(0.560f, 0.000f, 0.560f), new Vector3(0.680f, 0.000f, 0.560f) }, type = "plane" });
-        meshData.Add(new MeshGenData() { verts = new Vector3[4] { new Vector3(0.560f, 0.000f, 0.440f), new Vector3(0.680f, 0.000f, 0.440f), new Vector3(0.560f, 0.000f, 0.320f), new Vector3(0.680f, 0.000f, 0.320f) }, type = "plane" });
-        meshData.Add(new MeshGenData() { verts = new Vector3[4] { new Vector3(0.680f, 0.000f, 0.800f), new Vector3(0.800f, 0.000f, 0.800f), new Vector3(0.680f, 0.000f, 0.680f), new Vector3(0.800f, 0.000f, 0.680f) }, type = "plane" });
-        meshData.Add(new MeshGenData() { verts = new Vector3[4] { new Vector3(0.680f, 0.000f, 0.320f), new Vector3(0.800f, 0.000f, 0.320f), new Vector3(0.680f, 0.000f, 0.200f), new Vector3(0.800f, 0.000f, 0.200f) }, type = "plane" });
-        foreach (MeshGenData m in meshData) { m.pos = pos; m.size = new Vector3(sizeX, sizeY, sizeZ); m.offset = new Vector3(offsetX, offsetY, offsetZ); }
-        return Group(meshData, numVerts);
-    }
-
-    public static MeshGenItem MakeTerrainGpDot(Vector3 pos = new Vector3(), float sizeX = 1.0f, float sizeY = 1.0f, float sizeZ = 1.0f, float offsetX = 0.0f, float offsetY = 0.0f, float offsetZ = 0.0f, int numVerts = 0) {
-        List<MeshGenData> meshData = new List<MeshGenData>();
-        meshData.Add(new MeshGenData() { verts = new Vector3[4] { new Vector3(0.400f, 0.000f, 0.500f), new Vector3(0.500f, 0.000f, 0.600f), new Vector3(0.500f, 0.000f, 0.400f), new Vector3(0.600f, 0.000f, 0.500f) }, type = "plane" });
-        foreach (MeshGenData m in meshData) { m.pos = pos; m.size = new Vector3(sizeX, sizeY, sizeZ); m.offset = new Vector3(offsetX, offsetY, offsetZ); }
-        return Group(meshData, numVerts);
-    }
-
+    /*
     public static MeshGenItem MakeTerrainGpSquare(Vector3 pos = new Vector3(), float offset = 0.1f, float size = 1, int numVerts = 0, bool deform = true) {
         float h1 = 0; float h2 = 0; float h3 = 0; float h4 = 0;
         Vector2[] uv = new Vector2[4] {
@@ -223,6 +72,170 @@ public static class MeshGen
         plane.uv = uv;
         return plane;
     }
+    */
+
+    public static MeshGenItem MakeTerrainChunk(GridPoint[,] grid, Chunk chunk) {
+        List<MeshGenItem> meshGroup = new List<MeshGenItem>();
+        int count = 0; int numVerts = 0;
+        for (int x = chunk.start.x; x < chunk.end.x; x++) {
+            for (int z = chunk.start.z; z < chunk.end.z; z++) {
+                if (x <= grid.GetLength(0) && z <= grid.GetLength(1)) {
+                    if (grid[x, z].inBounds) {
+                        meshGroup.Add(MakeTerrainGp(grid[x, z].pos, grid[x, z].uv, numVerts));
+                        numVerts += meshGroup[count].verts.Length;
+                        count++;
+                    }
+                }
+            }
+        }
+        return Combine(meshGroup);
+    }
+
+    public static MeshGenItem MakeTerrainChunkLod(GridPoint[,] grid, Chunk chunk, int size = 1) {
+        List<MeshGenItem> meshGroup = new List<MeshGenItem>();
+        int count = 0; int numVerts = 0;
+        for (int x = chunk.start.x; x < chunk.end.x; x += size) {
+            for (int z = chunk.start.z; z < chunk.end.z; z += size) {
+                if (x <= grid.GetLength(0) && z <= grid.GetLength(1)) {
+                    if (grid[x, z].inBounds) {
+                        int maxX = x + size - 1; if (maxX >= chunk.end.x) { maxX = chunk.end.x-1; }
+                        int maxZ = z + size - 1; if (maxZ >= chunk.end.z) { maxZ = chunk.end.z-1; }
+                        if (maxX - x > 0 || maxZ - z > 0) {
+                            Vector3[] pos = new Vector3[4];
+                            Vector2[] uv = new Vector2[4];
+                            pos[0] = grid[x, maxZ].pos[0];
+                            pos[1] = grid[maxX, maxZ].pos[1];
+                            pos[2] = grid[x, z].pos[2];
+                            pos[3] = grid[maxX, z].pos[3];
+                            uv[0] = grid[x, maxZ].uv[0];
+                            uv[1] = grid[maxX, maxZ].uv[1];
+                            uv[2] = grid[x, z].uv[2];
+                            uv[3] = grid[maxX, z].uv[3];
+                            meshGroup.Add(MakeTerrainGp(pos, uv, numVerts));
+                            numVerts += meshGroup[count].verts.Length;
+                            count++;
+                        }
+                    }
+                }
+            }
+        }
+        return Combine(meshGroup);
+    }
+    /*
+    public static MeshGenItem MakeTerrainGp(GridPoint gp, int numVerts = 0) {
+        MeshGenItem plane = Plane(gp.pos, numVerts);
+        plane.uv = gp.uv;
+        return plane;
+    }
+    */
+    public static MeshGenItem MakeTerrainGp(Vector3[] pos, Vector2[] uv, int numVerts = 0) {
+        MeshGenItem plane = Plane(pos, numVerts);
+        plane.uv = uv;
+        return plane;
+    }
+    /*
+    public static MeshGenItem MakeTerrainGp(GridPoint gp, float size = 1, int numVerts = 0) {
+        Vector3[] pos = new Vector3[4];
+        Vector2[] uv = new Vector2[4];
+        if (size == 1) {
+            pos = gp.pos;
+            uv = gp.uv;
+        } else {
+            Vector3 posGrid = gp.pos[2];
+            Vector3[] rayStart = new Vector3[4];
+            Ray[] ray = new Ray[4];
+            RaycastHit[] hit = new RaycastHit[4];
+            rayStart[0] = posGrid + new Vector3(0.0f, 100000, size);
+            rayStart[1] = posGrid + new Vector3(size, 100000, size);
+            rayStart[2] = posGrid + new Vector3(0.0f, 100000, 0.0f);
+            rayStart[3] = posGrid + new Vector3(size, 100000, 0.0f);
+            ray[0] = new Ray(rayStart[0], new Vector3(0, -1, 0));
+            ray[1] = new Ray(rayStart[1], new Vector3(0, -1, 0));
+            ray[2] = new Ray(rayStart[2], new Vector3(0, -1, 0));
+            ray[3] = new Ray(rayStart[3], new Vector3(0, -1, 0));
+            if (Physics.Raycast(ray[0], out hit[0])) { pos[0] = hit[0].point; uv[0] = hit[0].textureCoord; } else { }//add zero here
+            if (Physics.Raycast(ray[1], out hit[1])) { pos[1] = hit[1].point; uv[1] = hit[1].textureCoord; } else { }
+            if (Physics.Raycast(ray[2], out hit[2])) { pos[2] = hit[2].point; uv[2] = hit[2].textureCoord; } else { }
+            if (Physics.Raycast(ray[3], out hit[3])) { pos[3] = hit[3].point; uv[3] = hit[3].textureCoord; } else { }
+        }
+        MeshGenItem plane = Plane(new Vector3[4] { pos[0], pos[1], pos[2], pos[3] }, numVerts);
+        plane.uv = uv;
+        return plane;
+    }
+    */
+
+    public static MeshGenItem MakeTerrainDictText(GridPoint[,] grid, Dictionary<Vector2Int, int> dict) {
+        List<MeshGenItem> meshGroup = new List<MeshGenItem>();
+        int count = 0; int numVerts = 0;
+        foreach (Vector2Int gp in dict.Keys) {
+            Vector3 pos = grid[gp.x, gp.y].posCenter;
+            Quaternion rotation = Camera.main.transform.rotation;
+            MeshGenItem mesh = MakeGroupAutoAlphaNum(dict[gp].ToString("D4"), Vector3.zero, 0.25f, 0.25f, 0.25f, 1, 0, 0, 0, numVerts);
+            mesh = ModFlipYZ(mesh);
+            mesh = ModRotate(mesh, rotation, new Vector3(0.5f, 0, 0));
+            mesh = ModOffset(mesh, pos + new Vector3(0, 2f, 0.5f));
+            meshGroup.Add(mesh);
+            numVerts += meshGroup[count].verts.Length;
+            count++;
+        }
+        return Combine(meshGroup);
+    }
+
+    public static MeshGenItem MakeTerrainGridChunk(GridPoint[,] grid, Chunk chunk, float angle = 0.0f, bool steepMode = false, float size = 1.0f, float offset = 0.01f) {
+        List<MeshGenItem> meshGroup = new List<MeshGenItem>();
+        int count = 0; int numVerts = 0;
+        for (int x = chunk.start.x; x < chunk.end.x; x++) {
+            for (int z = chunk.start.z; z < chunk.end.z; z++) {
+                if (x < grid.GetLength(0) && z < grid.GetLength(1)) {
+                    if (grid[x, z].inBounds && ((!steepMode && grid[x, z].angleCenter <= angle) || (steepMode && grid[x, z].angleCenter > angle))) {
+                        Quaternion rotation = Quaternion.FromToRotation(Vector3.up, grid[x, z].normalCenter);
+                        meshGroup.Add(ModRotate(MakeTerrainGpDot(grid[x, z].posCenter, size, numVerts), rotation, grid[x, z].posCenter));
+                        numVerts += meshGroup[count].verts.Length;
+                        count++;
+                    }
+                }
+            }
+        }
+        return Combine(meshGroup);
+    }
+    public static MeshGenItem MakeTerrainGpDot(Vector3 gridPos, float size = 1, int numVerts = 0) {
+        Vector3[] pos = new Vector3[4];
+        pos[0] = gridPos + new Vector3(-0.1f, 0, 0) * size;
+        pos[1] = gridPos + new Vector3(0, 0, 0.1f) * size;
+        pos[2] = gridPos + new Vector3(0, 0, -0.1f) * size;
+        pos[3] = gridPos + new Vector3(0.1f, 0, 0f) * size;
+        MeshGenItem plane = Plane(new Vector3[4] { pos[0], pos[1], pos[2], pos[3] }, numVerts);
+        return plane;
+    }
+
+    /*
+    public static MeshGenItem MakeTerrainGpSquare(Vector3 pos = new Vector3(), float offset = 0.1f, float size = 1, int numVerts = 0, bool deform = true) {
+        float h1 = 0; float h2 = 0; float h3 = 0; float h4 = 0;
+        Vector2[] uv = new Vector2[4] {
+        new Vector2(0, 0),
+        new Vector2(1, 0),
+        new Vector2(0, 1),
+        new Vector2(1, 1)
+        };
+        if (deform) {
+            Vector3 rayStart1 = pos + new Vector3(0.0f, 100000, size);
+            Vector3 rayStart2 = pos + new Vector3(size, 100000, size);
+            Vector3 rayStart3 = pos + new Vector3(0.0f, 100000, 0.0f);
+            Vector3 rayStart4 = pos + new Vector3(size, 100000, 0.0f);
+            Ray ray1 = new Ray(rayStart1, new Vector3(0, -1, 0));
+            Ray ray2 = new Ray(rayStart2, new Vector3(0, -1, 0));
+            Ray ray3 = new Ray(rayStart3, new Vector3(0, -1, 0));
+            Ray ray4 = new Ray(rayStart4, new Vector3(0, -1, 0));
+            RaycastHit hit1; if (Physics.Raycast(ray1, out hit1)) { h1 = hit1.point.y - pos.y; uv[0] = hit1.textureCoord; }
+            RaycastHit hit2; if (Physics.Raycast(ray2, out hit2)) { h2 = hit2.point.y - pos.y; uv[1] = hit2.textureCoord; }
+            RaycastHit hit3; if (Physics.Raycast(ray3, out hit3)) { h3 = hit3.point.y - pos.y; uv[2] = hit3.textureCoord; }
+            RaycastHit hit4; if (Physics.Raycast(ray4, out hit4)) { h4 = hit4.point.y - pos.y; uv[3] = hit4.textureCoord; }
+        }
+        MeshGenItem plane = Plane(new Vector3[4] { new Vector3(0.0f, h1 + 0.0f + offset, size) + pos, new Vector3(size, h2 + 0.0f + offset, size) + pos, new Vector3(0.0f, h3 + 0.0f + offset, 0.0f) + pos, new Vector3(size, h4 + 0.0f + offset, 0.0f) + pos }, numVerts);
+        plane.uv = uv;
+        return plane;
+    }
+    */
 
     public static MeshGenItem MakeGroupAutoAlphaNum(string content, Vector3 pos = new Vector3(), float sizeX = 0.25f, float sizeY = 0.25f, float sizeZ = 0.25f, float offsetX = 1.0f, float offsetY = 0.0f, float offsetZ = 0.0f, float marginLine = 1f, int numVerts = 0) {
         List<MeshGenItem> meshGroup = new List<MeshGenItem>();

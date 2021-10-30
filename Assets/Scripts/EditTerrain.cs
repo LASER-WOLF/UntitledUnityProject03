@@ -57,8 +57,10 @@ public class EditTerrain : MonoBehaviour {
     }
 
     void SetupCam() {
-        Camera.main.transform.position = new Vector3(-72, 36, -70);
-        Camera.main.transform.rotation = Quaternion.Euler(17.5f, 0, 0);
+        //Camera.main.transform.position = new Vector3(-72, 36, -70);
+        //Camera.main.transform.rotation = Quaternion.Euler(17.5f, 0, 0);
+        Camera.main.transform.position = new Vector3(-72, 40, -70);
+        Camera.main.transform.rotation = Quaternion.Euler(25f, 0, 0);
     }
 
     void SetupScene() {
@@ -127,12 +129,6 @@ public class EditTerrain : MonoBehaviour {
         if (Input.mouseScrollDelta.y != 0) {
             ChangeSelId((int)Input.mouseScrollDelta.y * -1);
         }
-
-        /*
-        if (Input.GetKeyDown(KeyCode.Space)) { //temp
-            terrainManager.GridGrassSetLods(Camera.main.transform.position);
-        }
-        */
     }
 
     void UpdateUi() {
@@ -153,7 +149,6 @@ public class EditTerrain : MonoBehaviour {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit; if (Physics.Raycast(ray, out hit)) {
             return terrainManager.WorldtoGrid(hit.point);
-            //return null;
         } else { return null; }
     }
 
@@ -165,13 +160,6 @@ public class EditTerrain : MonoBehaviour {
 
     void ChangeSelId(int i) {
         selId = Utils.IntIncDec(i, selId, idMax, 1);
-        /*
-        if (mode[selMode] == "unit") {
-            EditUnit(selGp, selId);
-        } else if (mode[selMode] == "grass") {
-            EditGrass(selGp, selId);
-        }
-        */
         UpdatePreview(selId);
     }
 
@@ -186,11 +174,9 @@ public class EditTerrain : MonoBehaviour {
         if (selGp != gp) {
             selGo.GetComponent<Renderer>().enabled = true;
             Quaternion rotation = Quaternion.FromToRotation(transform.up, gp.normalCenter);
-            selGo.GetComponent<MeshFilter>().mesh = MeshGen.Create(MeshGen.MakeTerrainGpDotRotated(rotation, gp.posCenter, 2, 2, 2, 0.02f));
+            selGo.GetComponent<MeshFilter>().mesh = MeshGen.Create(MeshGen.ModRotate(MeshGen.MakeTerrainGpDot(gp.posCenter, 2), rotation, gp.posCenter));
             selGp = gp;
         }
-        //if (mode[selMode] == "unit" && listManager.UnitsPlaced.ContainsKey(gp)) { selId = listManager.UnitsPlaced[gp]; }
-        //else if (mode[selMode] == "grass" && listManager.GrassPlaced.Exists(g => g.terrainId == _terrainId && g.gp == gp)) { selId = listManager.GrassPlaced.Find(g => g.terrainId == _terrainId && g.gp == gp).grass.id; }
     }
 
     void AddUnit(GridPoint gp, int id) {
@@ -201,8 +187,6 @@ public class EditTerrain : MonoBehaviour {
 
 
     void AddGrass(GridPoint gp, Grass grass) {
-        //listManager.GrassPlaced.RemoveAll(g => g.terrainId == _terrainId && g.gp == gp);
-        //listManager.GrassPlaced.Add(new GrassPlaced() { grass = listManager.Grass[id], gp = gp, terrainId = _terrainId });
         terrainManager.GridGrassAdd(gp, grass);
     }
 
@@ -213,8 +197,6 @@ public class EditTerrain : MonoBehaviour {
     }
 
     void RemoveGrass(GridPoint gp) {
-        //if (listManager.GrassPlaced.Exists(g => g.terrainId == _terrainId && g.gp == gp)) {}
-        //listManager.GrassPlaced.RemoveAll(g => g.terrainId == _terrainId && g.gp == gp);
         terrainManager.GridGrassRemove(gp);
     }
 

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class UiManager : MonoBehaviour
 {
@@ -36,8 +37,20 @@ public class UiManager : MonoBehaviour
 
     public void SetMainMenu(string text) {
         float size = 0.015f;
+
+        int maxLength = 0;
+        string[] lines = text.Split(
+            new string[] { "\n" },
+            StringSplitOptions.None
+        );
+        foreach (string line in lines) {
+            if (line.Length > maxLength) { maxLength = line.Length; }
+        }
+
+        float offsetX = ((maxLength * size) / 2) * -1;
+        //float offsetZ = ((lines.GetLength(0) * size) / 2) * -1;
         Mesh mesh = new Mesh();
-        if (!string.IsNullOrEmpty(text)) { mesh = MeshGen.Create(MeshGen.MakeGroupAutoAlphaNum(text, new Vector3(0, 0, 0), size, size, size), false, true); }
+        if (!string.IsNullOrEmpty(text)) { mesh = MeshGen.Create(MeshGen.MakeGroupAutoAlphaNum(text, new Vector3(offsetX, 0, 0), size, size, size), false, true); }
         _mainMenu.GetComponent<MeshFilter>().mesh = mesh;
     }
 
@@ -69,6 +82,9 @@ public class UiManager : MonoBehaviour
     }
 
     void SetupUi() {
+        //Color color0 = new Color(0.6792453f, 0.9056604f, 0.8945822f, 1.0f);
+        Color color0 = new Color(1.0f, 1.0f, 1.0f, 1.0f);
+
         _uiGroup = new GameObject("ui");
         _uiGroup.transform.SetParent(cameraManager.UiCamGo.transform);
         _uiGroup.transform.localPosition = new Vector3(0, 0, 0);
@@ -88,7 +104,8 @@ public class UiManager : MonoBehaviour
 
         _mainMenu = new GameObject("mainMenu", typeof(MeshFilter), typeof(MeshRenderer));
         _mainMenu.GetComponent<Renderer>().material = Resources.Load<Material>("Materials/unlit");
-        _mainMenu.GetComponent<Renderer>().material.color = new Color(1.0f, 1.0f, 1.0f, 1.0f);
+        //_mainMenu.GetComponent<Renderer>().material.color = new Color(1.0f, 1.0f, 1.0f, 1.0f);
+        _mainMenu.GetComponent<Renderer>().material.color =  color0;
         _mainMenu.transform.SetParent(_uiGroup.transform);
         _mainMenu.transform.localPosition = new Vector3(0, 0f, 1);
         _mainMenu.transform.localRotation = Quaternion.identity;
@@ -97,7 +114,7 @@ public class UiManager : MonoBehaviour
 
         _bottomText = new GameObject("bottomText", typeof(MeshFilter), typeof(MeshRenderer));
         _bottomText.GetComponent<Renderer>().material = Resources.Load<Material>("Materials/unlit");
-        _bottomText.GetComponent<Renderer>().material.color = new Color(1.0f, 1.0f, 1.0f, 1.0f);
+        _bottomText.GetComponent<Renderer>().material.color = color0;
         _bottomText.transform.SetParent(_uiGroup.transform);
         _bottomText.transform.localPosition = new Vector3(0, -0.57f, 1);
         _bottomText.transform.localRotation = Quaternion.identity;
@@ -106,7 +123,7 @@ public class UiManager : MonoBehaviour
 
         _editUnit = new GameObject("editUnit", typeof(MeshFilter), typeof(MeshRenderer));
         _editUnit.GetComponent<Renderer>().material = Resources.Load<Material>("Materials/unlit");
-        _editUnit.GetComponent<Renderer>().material.color = new Color(1.0f, 1.0f, 1.0f, 1.0f);
+        _editUnit.GetComponent<Renderer>().material.color = color0;
         _editUnit.transform.SetParent(_uiGroup.transform);
         _editUnit.transform.localPosition = new Vector3(-0.8f, 0f, 1);
         _editUnit.transform.localRotation = Quaternion.identity;
