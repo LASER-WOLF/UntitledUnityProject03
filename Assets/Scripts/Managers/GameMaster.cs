@@ -22,6 +22,7 @@ public class GameMaster : MonoBehaviour
 
     void Awake()
     {
+        Debug.Log("Starting game");
         Setup();
         Dependencies();
         Enable();

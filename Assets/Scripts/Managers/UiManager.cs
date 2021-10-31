@@ -9,6 +9,7 @@ public class UiManager : MonoBehaviour
 
     GameObject _uiGroup;
     GameObject _mainMenu;
+    GameObject _topText;
     GameObject _bottomText;
     GameObject _editUnit;
     GameObject _editTerrainPreviewGroup;
@@ -18,6 +19,11 @@ public class UiManager : MonoBehaviour
     public GameObject MainMenu {
         get => _mainMenu;
         set => _mainMenu = value;
+    }
+
+    public GameObject TopText {
+        get => _topText;
+        set => _topText = value;
     }
 
     public GameObject BottomText {
@@ -48,10 +54,18 @@ public class UiManager : MonoBehaviour
         }
 
         float offsetX = ((maxLength * size) / 2) * -1;
-        //float offsetZ = ((lines.GetLength(0) * size) / 2) * -1;
         Mesh mesh = new Mesh();
         if (!string.IsNullOrEmpty(text)) { mesh = MeshGen.Create(MeshGen.MakeGroupAutoAlphaNum(text, new Vector3(offsetX, 0, 0), size, size, size), false, true); }
         _mainMenu.GetComponent<MeshFilter>().mesh = mesh;
+    }
+
+    public void SetTopText(string text) {
+        float size = 0.015f;
+        float offsetX = ((text.Length * size) / 2) * -1;
+        float offsetZ = size * -1;
+        Mesh mesh = new Mesh();
+        if (!string.IsNullOrEmpty(text)) { mesh = MeshGen.Create(MeshGen.MakeGroupAutoAlphaNum(text, new Vector3(offsetX, 0, offsetZ), size, size, size), false, true); }
+        _topText.GetComponent<MeshFilter>().mesh = mesh;
     }
 
     public void SetBottomText(string text) {
@@ -82,16 +96,15 @@ public class UiManager : MonoBehaviour
     }
 
     void SetupUi() {
-        //Color color0 = new Color(0.6792453f, 0.9056604f, 0.8945822f, 1.0f);
         Color color0 = new Color(1.0f, 1.0f, 1.0f, 1.0f);
 
-        _uiGroup = new GameObject("ui");
+        _uiGroup = new GameObject("UI");
         _uiGroup.transform.SetParent(cameraManager.UiCamGo.transform);
         _uiGroup.transform.localPosition = new Vector3(0, 0, 0);
         _uiGroup.transform.localRotation = Quaternion.identity;
         _uiGroup.layer = 5;
 
-        _uiLight = new GameObject("light", typeof(Light));
+        _uiLight = new GameObject("Light", typeof(Light));
         _uiLight.transform.SetParent(_uiGroup.transform);
         _uiLight.transform.localPosition = new Vector3(0, 1, 0);
         _uiLight.transform.rotation = Quaternion.Euler(90, 0, 0);
@@ -102,7 +115,7 @@ public class UiManager : MonoBehaviour
         _uiLight.GetComponent<Light>().cullingMask = 1 << 5;
         _uiLight.layer = 5;
 
-        _mainMenu = new GameObject("mainMenu", typeof(MeshFilter), typeof(MeshRenderer));
+        _mainMenu = new GameObject("MainMenu", typeof(MeshFilter), typeof(MeshRenderer));
         _mainMenu.GetComponent<Renderer>().material = Resources.Load<Material>("Materials/unlit");
         //_mainMenu.GetComponent<Renderer>().material.color = new Color(1.0f, 1.0f, 1.0f, 1.0f);
         _mainMenu.GetComponent<Renderer>().material.color =  color0;
@@ -112,7 +125,16 @@ public class UiManager : MonoBehaviour
         _mainMenu.SetActive(false);
         _mainMenu.layer = 5;
 
-        _bottomText = new GameObject("bottomText", typeof(MeshFilter), typeof(MeshRenderer));
+        _topText = new GameObject("TopText", typeof(MeshFilter), typeof(MeshRenderer));
+        _topText.GetComponent<Renderer>().material = Resources.Load<Material>("Materials/unlit");
+        _topText.GetComponent<Renderer>().material.color = color0;
+        _topText.transform.SetParent(_uiGroup.transform);
+        _topText.transform.localPosition = new Vector3(0, 0.57f, 1);
+        _topText.transform.localRotation = Quaternion.identity;
+        _topText.SetActive(false);
+        _topText.layer = 5;
+
+        _bottomText = new GameObject("BottomText", typeof(MeshFilter), typeof(MeshRenderer));
         _bottomText.GetComponent<Renderer>().material = Resources.Load<Material>("Materials/unlit");
         _bottomText.GetComponent<Renderer>().material.color = color0;
         _bottomText.transform.SetParent(_uiGroup.transform);
@@ -121,7 +143,7 @@ public class UiManager : MonoBehaviour
         _bottomText.SetActive(false);
         _bottomText.layer = 5;
 
-        _editUnit = new GameObject("editUnit", typeof(MeshFilter), typeof(MeshRenderer));
+        _editUnit = new GameObject("EditUnit", typeof(MeshFilter), typeof(MeshRenderer));
         _editUnit.GetComponent<Renderer>().material = Resources.Load<Material>("Materials/unlit");
         _editUnit.GetComponent<Renderer>().material.color = color0;
         _editUnit.transform.SetParent(_uiGroup.transform);
@@ -130,14 +152,14 @@ public class UiManager : MonoBehaviour
         _editUnit.SetActive(false);
         _editUnit.layer = 5;
 
-        _editTerrainPreviewGroup = new GameObject("editTerrainPreviewGroup");
+        _editTerrainPreviewGroup = new GameObject("EditTerrainPreviewGroup");
         _editTerrainPreviewGroup.transform.SetParent(_uiGroup.transform);
         _editTerrainPreviewGroup.transform.localPosition = new Vector3(0, 0, 0);
         _editTerrainPreviewGroup.transform.localRotation = Quaternion.identity;
         _editTerrainPreviewGroup.SetActive(false);
         _editTerrainPreviewGroup.layer = 5;
 
-        _editTerrainPreviewBg = new GameObject("editTerrainPreviewBg", typeof(MeshFilter), typeof(MeshRenderer));
+        _editTerrainPreviewBg = new GameObject("EditTerrainPreviewBg", typeof(MeshFilter), typeof(MeshRenderer));
         _editTerrainPreviewBg.GetComponent<Renderer>().material = Resources.Load<Material>("Materials/unlit");
         _editTerrainPreviewBg.GetComponent<Renderer>().material.color = new Color(0.38f, 0.38f, 0.38f, 1.0f);
         _editTerrainPreviewBg.transform.SetParent(_editTerrainPreviewGroup.transform);
@@ -147,7 +169,7 @@ public class UiManager : MonoBehaviour
         _editTerrainPreviewBg.GetComponent<MeshFilter>().mesh = MeshGen.Create(MeshGen.MakeSquare(new Vector3(-0.75f, 0, -0.75f), 1.5f, 1, 1.5f));
         _editTerrainPreviewBg.layer = 5;
 
-        _editTerrainPreview = new GameObject("editTerrainPreview", typeof(MeshFilter), typeof(MeshRenderer));
+        _editTerrainPreview = new GameObject("EditTerrainPreview", typeof(MeshFilter), typeof(MeshRenderer));
         _editTerrainPreview.GetComponent<Renderer>().material = Resources.Load<Material>("Materials/unlit");
         _editTerrainPreview.GetComponent<Renderer>().material.color = new Color(1.0f, 1.0f, 1.0f, 1.0f);
         _editTerrainPreview.transform.SetParent(_editTerrainPreviewGroup.transform);

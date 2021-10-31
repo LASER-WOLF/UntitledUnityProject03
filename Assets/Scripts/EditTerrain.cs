@@ -39,6 +39,8 @@ public class EditTerrain : MonoBehaviour {
     int meshRotation;
 
     private void OnEnable() {
+        Debug.Log("Starting terrain editor");
+        uiManager.TopText.SetActive(true);
         uiManager.BottomText.SetActive(true);
         uiManager.EditTerrainPreviewGroup.SetActive(true);
         terrainManager.TerrainId = TerrainId;
@@ -46,6 +48,7 @@ public class EditTerrain : MonoBehaviour {
         SetupCam();
     }
     private void OnDisable() {
+        uiManager.TopText.SetActive(false);
         uiManager.BottomText.SetActive(false);
         uiManager.EditTerrainPreviewGroup.SetActive(false);
         terrainManager.gameObject.SetActive(false);
@@ -57,8 +60,6 @@ public class EditTerrain : MonoBehaviour {
     }
 
     void SetupCam() {
-        //Camera.main.transform.position = new Vector3(-72, 36, -70);
-        //Camera.main.transform.rotation = Quaternion.Euler(17.5f, 0, 0);
         Camera.main.transform.position = new Vector3(-72, 40, -70);
         Camera.main.transform.rotation = Quaternion.Euler(25f, 0, 0);
     }
@@ -75,7 +76,7 @@ public class EditTerrain : MonoBehaviour {
         unitGo.GetComponent<Renderer>().material.color = new Color(0.85f, 0.5f, 0.5f, 1f);
         unitGo.GetComponent<MeshFilter>().mesh.MarkDynamic();
         unitGo.transform.SetParent(this.transform);
-        unitGo.transform.localPosition = new Vector3(0, 0, 0);
+        unitGo.transform.localPosition = new Vector3(0, 0.2f, 0);
 
         unitTextGo = new GameObject("unitsText", typeof(MeshFilter), typeof(MeshRenderer));
         unitTextGo.GetComponent<Renderer>().material = Resources.Load<Material>("Materials/unlit");
@@ -106,19 +107,22 @@ public class EditTerrain : MonoBehaviour {
                 //Debug.Log(terrainManager.GpToChunk(selGp).id);
                 if (Input.GetMouseButton(0)) {
                     if (mode[selMode] == "unit") {
-                        AddUnit(selGp, selId);
+                        AddUnit(selGp, dataManager.Units[selId]);
                     } else if (mode[selMode] == "grass") {
                         AddGrass(selGp, dataManager.Grass[selId]);
                     }
                 } else if (Input.GetMouseButton(1)) {
                     if (mode[selMode] == "unit") {
-                        RemoveUnit(selGp, selId);
+                        RemoveUnit(selGp);
                     } else if (mode[selMode] == "grass") {
                         RemoveGrass(selGp);
                     }
                 }
             }
-
+        } else if (!Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift) && Input.GetKeyDown(KeyCode.G)) {
+            terrainManager.GridGrassFillTerrain();
+        } else if ((Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) && Input.GetKeyDown(KeyCode.G)) {
+            terrainManager.GrassGenTexture();
         } else if (Input.GetKeyDown(KeyCode.Tab)) {
             ChangeMode();
         } else if (Input.GetKeyDown(KeyCode.Escape)) {
@@ -132,12 +136,17 @@ public class EditTerrain : MonoBehaviour {
     }
 
     void UpdateUi() {
-        string textString = string.Empty;
-        textString += "MODE [TAB]: " + mode[selMode].ToUpper();
-        textString += " - " + " ADD/DEL [L-MOUSE] ";
-        textString += " - " + " GP: " + selGp.x.ToString("D4") + "x" + selGp.z.ToString("D4");
-        textString += " - " + " ID [M-WHEEL]: " + "< " + selId.ToString("D4") + " >";
-        uiManager.SetBottomText(textString);
+        string uiTopTextString = string.Empty;
+        uiTopTextString += "[G] SPAWN GRASS";
+        uiTopTextString += " - " + "[SHIFT+G] GENERATE TEXTURE";
+        uiManager.SetTopText(uiTopTextString);
+
+        string uiBottomTextString = string.Empty;
+        uiBottomTextString += "MODE [TAB]: " + mode[selMode].ToUpper();
+        uiBottomTextString += " - " + " ADD/DEL [L-MOUSE] ";
+        uiBottomTextString += " - " + " GP: " + selGp.x.ToString("D4") + "x" + selGp.z.ToString("D4");
+        uiBottomTextString += " - " + " ID [M-WHEEL]: " + "< " + selId.ToString("D4") + " >";
+        uiManager.SetBottomText(uiBottomTextString);
     }
 
     void UpdateMesh() {
@@ -178,34 +187,35 @@ public class EditTerrain : MonoBehaviour {
             selGp = gp;
         }
     }
-
-    void AddUnit(GridPoint gp, int id) {
-        if (!dataManager.UnitsPlaced.ContainsKey(gp)) {
-            dataManager.UnitsPlaced.Add(gp, id);
-        }
-    }
-
-
+    
     void AddGrass(GridPoint gp, Grass grass) {
         terrainManager.GridGrassAdd(gp, grass);
     }
+    
+    void RemoveGrass(GridPoint gp) {
+        terrainManager.GridGrassRemove(gp);
+    }
+    
+    void AddUnit(GridPoint gp, Unit unit) {
+        if (!dataManager.UnitsPlaced.ContainsKey(gp)) {
+            dataManager.UnitsPlaced.Add(gp, unit);
+        }
+    }
 
-    void RemoveUnit(GridPoint gp, int id) {
+    void RemoveUnit(GridPoint gp) {
         if (dataManager.UnitsPlaced.ContainsKey(gp)) {
             dataManager.UnitsPlaced.Remove(gp);
         }
     }
 
-    void RemoveGrass(GridPoint gp) {
-        terrainManager.GridGrassRemove(gp);
-    }
 
-    void EditUnit(GridPoint gp, int id) {
+    /*
+    void EditUnit(GridPoint gp, Unit unit) {
         if (dataManager.UnitsPlaced.ContainsKey(gp)) {
-            dataManager.UnitsPlaced[gp] = id;
+            dataManager.UnitsPlaced[gp] = unit;
         }
     }
-
+    */
     /*
     void EditGrass(Vector2Int gp, int id) {
         if (listManager.GrassPlaced.Exists(g => g.terrainId == _terrainId && g.gp == gp)) {
@@ -216,12 +226,12 @@ public class EditTerrain : MonoBehaviour {
     */
 
     void UpdateMeshUnit() {
-        //unitGo.GetComponent<MeshFilter>().mesh = MeshGen.Create(MeshGen.MakeTerrainDictUnit(terrainManager.Grid, dataManager.UnitsPlaced, Quaternion.Euler(0, meshRotation, 0)));
+        unitGo.GetComponent<MeshFilter>().mesh = MeshGen.Create(MeshGen.MakeTerrainDictUnit(dataManager.UnitsPlaced, Quaternion.Euler(0, meshRotation, 0)));
         meshRotation++;
     }
 
     void UpdateMeshUnitText() {
-        //unitTextGo.GetComponent<MeshFilter>().mesh = MeshGen.Create(MeshGen.MakeTerrainDictText(terrainManager.Grid, dataManager.UnitsPlaced));
+        unitTextGo.GetComponent<MeshFilter>().mesh = MeshGen.Create(MeshGen.MakeTerrainDictText(dataManager.UnitsPlaced));
     }
 
 

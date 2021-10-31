@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using System.IO;
+using UnityEditor;
 
 public class TerrainManager : MonoBehaviour {
     public DataManager dataManager;
@@ -22,7 +23,6 @@ public class TerrainManager : MonoBehaviour {
     Dictionary<Chunk, GameObject> gridSteepGoCollection = new Dictionary<Chunk, GameObject>();
     Dictionary<Chunk, GameObject> grassChunkGoCollection = new Dictionary<Chunk, GameObject>();
     Dictionary<Chunk, Dictionary<Grass, GameObject>> grassLod0GoCollection = new Dictionary<Chunk, Dictionary<Grass, GameObject>>();
-    //Dictionary<Chunk, Dictionary<Grass, GameObject>> grassLod1GoCollection = new Dictionary<Chunk, Dictionary<Grass, GameObject>>();
 
     Vector3 _terrainSize;
     Vector3Int _terrainSizeInt;
@@ -58,11 +58,11 @@ public class TerrainManager : MonoBehaviour {
         get => _terrainSize;
         set => _terrainSize = value;
     }
+
     public Vector3Int TerrainSizeInt {
         get => _terrainSizeInt;
         set => _terrainSizeInt = value;
     }
-
 
     public Vector3 TerrainPos {
         get => _terrainPos;
@@ -70,9 +70,9 @@ public class TerrainManager : MonoBehaviour {
     }
 
     void Awake() {
-        Debug.Log("starting TerrainManager");
+        Debug.Log("Starting TerrainManager");
         SetupTerrain();
-        GridGrassFillTerrain();
+        //GridGrassFillTerrain();
     }
 
     private void Update() {
@@ -81,40 +81,38 @@ public class TerrainManager : MonoBehaviour {
 
     void SetupTerrain() {
         Debug.Log("Setting up terrain");
-
-        terrainGo = new GameObject("terrain");
+        //Terrain parent GO
+        terrainGo = new GameObject("Terrain");
         terrainGo.transform.SetParent(this.transform);
         terrainGo.transform.localPosition = new Vector3(0, 0, 0);
-
-        grassGo = new GameObject("grass");
+        //Grass parent GO
+        grassGo = new GameObject("Grass");
         grassGo.transform.SetParent(this.transform);
         grassGo.transform.localPosition = new Vector3(0, 0.001f, 0);
-
-        gridGo = new GameObject("grid");
+        //Grid parent GO
+        gridGo = new GameObject("Grid");
         gridGo.transform.SetParent(this.transform);
         gridGo.transform.localPosition = new Vector3(0, .2f, 0);
-
+        //Setup terrain & grid
         ProcessRawTerrain();
         GridMeshGen(angle);
-
-        lightSun = new GameObject("lightSun", typeof(Light));
+        //Setup light
+        lightSun = new GameObject("LightSun", typeof(Light));
         lightSun.transform.SetParent(this.transform);
         lightSun.transform.localPosition = new Vector3(0, 50, 0);
         lightSun.transform.rotation = Quaternion.Euler(30f, -213, 0);
         lightSun.GetComponent<Light>().type = LightType.Directional;
-        //lightSun.GetComponent<Light>().color = new Color(0.82f, 0.55f, 0.46f, 1.00f);
-        //lightSun.GetComponent<Light>().color = new Color(0.8980f, 0.8549f, 0.6901f, 1.00f);
         lightSun.GetComponent<Light>().color = new Color(0.8867924f, 0.7770787f, 0.6734603f, 1.00f);
         lightSun.GetComponent<Light>().intensity = 1.75f;
         lightSun.GetComponent<Light>().shadows = LightShadows.None;
         lightSun.GetComponent<Light>().cullingMask = 1;
-
         RenderSettings.sun = lightSun.GetComponent<Light>();
         RenderSettings.skybox = Resources.Load<Material>("Terrain/" + TerrainId.ToString("D2") + "/" + TerrainId.ToString("D2") + "-skybox");
     }
 
     void ProcessRawTerrain() {
-        GameObject rawTerrain = new GameObject("rawTerrain", typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider));
+        Debug.Log("Processing raw terrain");
+        GameObject rawTerrain = new GameObject("RawTerrain", typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider));
         rawTerrain.transform.localScale = new Vector3(0.25f, 0.25f, 0.25f);
         rawTerrain.transform.SetParent(this.transform);
         rawTerrain.GetComponent<MeshFilter>().sharedMesh = Resources.Load<Mesh>("Terrain/" + TerrainId.ToString("D2") + "/" + TerrainId.ToString("D2") + "-mesh");
@@ -125,13 +123,13 @@ public class TerrainManager : MonoBehaviour {
         Grid = GridGen(TerrainSizeInt);
         ChunkGrid = ChunkGridGen(TerrainSizeInt);
         TerrainMeshGen();
-        //Destroy(rawTerrain);
-        rawTerrain.SetActive(false);
+        Destroy(rawTerrain);
+        //rawTerrain.SetActive(false);
         //Grid = GridGen(TerrainSizeInt);
     }
 
-    void GridGrassFillTerrain() {
-        //grass
+    public void GridGrassFillTerrain() {
+        //Grass
         GridGrassAutoGen(Grid, dataManager.Grass[3], 0, 85, 00.0f, 01.8f);
         GridGrassAutoGen(Grid, dataManager.Grass[4], 0, 80, 01.8f, 02.4f);
         GridGrassAutoGen(Grid, dataManager.Grass[5], 0, 75, 02.4f, 03.6f);
@@ -152,7 +150,7 @@ public class TerrainManager : MonoBehaviour {
         GridGrassAutoGen(Grid, dataManager.Grass[1], 0, 125, 34.6f, 38.8f);
         GridGrassAutoGen(Grid, dataManager.Grass[2], 0, 105, 38.8f, 39.2f);
         GridGrassAutoGen(Grid, dataManager.Grass[1], 0, 125, 39.2f, 44.4f);
-        //snow
+        //Snow
         GridGrassAutoGen(Grid, dataManager.Grass[17], 120, 130, 00.6f, 17.8f);
         GridGrassAutoGen(Grid, dataManager.Grass[17], 130, 135, 00.0f, 19.8f);
         GridGrassAutoGen(Grid, dataManager.Grass[18], 120, 130, 20.2f, 22.4f);
@@ -162,14 +160,15 @@ public class TerrainManager : MonoBehaviour {
         GridGrassAutoGen(Grid, dataManager.Grass[19], 135, 200, 00.0f, 19.8f);
         GridGrassAutoGen(Grid, dataManager.Grass[20], 135, 200, 19.8f, 48.8f);
         GridGrassAutoGen(Grid, dataManager.Grass[18], 135, 200, 48.8f, 88.8f);
-
+        //MeshGen
         GridGrassMeshGenAll();
-        //GrassGenTexture();
     }
 
+    /*
     void RotateSun() {
         lightSun.transform.Rotate(0.025f, 0, 0);
     }
+    */
 
     public GridPoint WorldtoGrid(Vector3 pos) {
         int x = (int)((pos.x + (TerrainSize.x / 2)) - TerrainPos.x);
@@ -242,7 +241,6 @@ public class TerrainManager : MonoBehaviour {
 
     Chunk[,] ChunkGridGen(Vector3Int size) {
         Debug.Log("Generating chunk grid");
-        //Vector2Int chunkNum = new Vector2Int();
         int chunkNumX = Mathf.CeilToInt((float)size.x / (float)chunkSize);
         int chunkNumZ = Mathf.CeilToInt((float)size.z / (float)chunkSize);
         Chunk[,] chunkGridGen = new Chunk[chunkNumX, chunkNumZ];
@@ -256,11 +254,9 @@ public class TerrainManager : MonoBehaviour {
                 int endZ = (chunkZ + 1) * chunkSize;
                 if (endZ >= size.z) { endZ = size.z - 1; }
                 chunkGridGen[chunkX, chunkZ] = new Chunk();
-                //chunkGridGen[chunkX, chunkZ].id = chunkCount;
                 chunkGridGen[chunkX, chunkZ].x = chunkX;
                 chunkGridGen[chunkX, chunkZ].z = chunkZ;
                 chunkGridGen[chunkX, chunkZ].size = chunkSize;
-                //chunkGridGen[chunkX, chunkZ].posCenter = Grid[Mathf.FloorToInt(startX + ((endX - startX) / 2)), Mathf.FloorToInt(startZ + ((endZ - startZ) / 2))].posCenter;
                 chunkGridGen[chunkX, chunkZ].start = Grid[startX, startZ];
                 chunkGridGen[chunkX, chunkZ].end = Grid[endX, endZ];
                 chunkCount++;
@@ -268,336 +264,63 @@ public class TerrainManager : MonoBehaviour {
         }
         Debug.Log(chunkNumX + "x" + chunkNumZ + " chunk grid generated");
         return chunkGridGen;
-    }
-    /*
-    Chunk[,] ChunkGridGen(Vector3Int size) {
-        Debug.Log("Generating chunk grid");
-        //Vector2Int chunkNum = new Vector2Int();
-        int chunkNumX = Mathf.CeilToInt((float)size.x / (float)chunkSize);
-        int chunkNumZ = Mathf.CeilToInt((float)size.z / (float)chunkSize);
-        Chunk[,] chunkGridGen = new Chunk[chunkNumX, chunkNumZ];
-        int chunkCount = 0;
-        for (int chunkX = 0; chunkX < chunkNumX; chunkX++) {
-            int startX = chunkX * chunkSize;
-            int endX = (chunkX + 1) * chunkSize;
-            if (endX >= size.x) { endX = size.x - 1; }
-            for (int chunkZ = 0; chunkZ < chunkNumZ; chunkZ++) {
-                int startZ = chunkZ * chunkSize;
-                int endZ = (chunkZ + 1) * chunkSize;
-                if (endZ >= size.z) { endZ = size.z - 1; }
-                chunkGridGen[chunkX, chunkZ] = new Chunk();
-                //chunkGridGen[chunkX, chunkZ].id = chunkCount;
-                chunkGridGen[chunkX, chunkZ].x = chunkX;
-                chunkGridGen[chunkX, chunkZ].z = chunkZ;
-                chunkGridGen[chunkX, chunkZ].size = chunkSize;
-                //chunkGridGen[chunkX, chunkZ].posCenter = Grid[Mathf.FloorToInt(startX + ((endX - startX) / 2)), Mathf.FloorToInt(startZ + ((endZ - startZ) / 2))].posCenter;
-                chunkGridGen[chunkX, chunkZ].start = Grid[startX, startZ];
-                chunkGridGen[chunkX, chunkZ].end = Grid[endX, endZ];
-                chunkCount++;
-            }
-        }
-        Debug.Log(chunkNumX + "x" + chunkNumZ + " chunk grid generated");
-        return chunkGridGen;
-    }
-    */
-
-    void GridMeshGen(float angle) {
-        Debug.Log("Generating grid mesh");
-        foreach (Chunk chunk in ChunkGrid) {
-            gridChunkGoCollection.Add(chunk, new GameObject("chunk: #" + chunk.x.ToString("D4") + "x" + chunk.z.ToString("D4"), typeof(LODGroup)));
-            gridChunkGoCollection[chunk].transform.SetParent(gridGo.transform);
-            gridChunkGoCollection[chunk].transform.localPosition = new Vector3(0, 0, 0);
-            gridGoCollection.Add(chunk, new GameObject("grid", typeof(MeshFilter), typeof(MeshRenderer)));
-            gridGoCollection[chunk].transform.SetParent(gridChunkGoCollection[chunk].transform);
-            gridGoCollection[chunk].transform.localPosition = new Vector3(0, 0, 0);
-            gridGoCollection[chunk].GetComponent<Renderer>().material = Resources.Load<Material>("Materials/unlitTrans");
-            gridGoCollection[chunk].GetComponent<Renderer>().material.color = new Color(.8f, .8f, .8f, .3f);
-            gridGoCollection[chunk].GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            gridGoCollection[chunk].GetComponent<MeshFilter>().mesh = MeshGen.Create(MeshGen.MakeTerrainGridChunk(Grid, chunk, angle));
-            gridSteepGoCollection.Add(chunk, new GameObject("grid steep", typeof(MeshFilter), typeof(MeshRenderer)));
-            gridSteepGoCollection[chunk].transform.SetParent(gridChunkGoCollection[chunk].transform);
-            gridSteepGoCollection[chunk].transform.localPosition = new Vector3(0, 0.05f, 0);
-            gridSteepGoCollection[chunk].GetComponent<Renderer>().material = Resources.Load<Material>("Materials/unlitTrans");
-            gridSteepGoCollection[chunk].GetComponent<Renderer>().material.color = new Color(0.75f, 0.35f, 0.35f, 0.6f);
-            gridSteepGoCollection[chunk].GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            gridSteepGoCollection[chunk].GetComponent<MeshFilter>().mesh = MeshGen.Create(MeshGen.MakeTerrainGridChunk(Grid, chunk, angle, true, 1.5f));
-            GridChunkUpdateLods(chunk);
-        }
-    }
-    void GridChunkUpdateLods(Chunk chunk) {
-        List<Renderer> r0List = new List<Renderer>();
-        if (gridGoCollection.ContainsKey(chunk)) { r0List.Add(gridGoCollection[chunk].GetComponent<Renderer>()); }
-        if (gridSteepGoCollection.ContainsKey(chunk)) { r0List.Add(gridSteepGoCollection[chunk].GetComponent<Renderer>()); }
-        Renderer[] r0Array = r0List.ToArray();
-        r0Array[0] = gridGoCollection[chunk].GetComponent<Renderer>();
-        LOD[] lods = new LOD[1];
-        lods[0] = new LOD(.5f, r0Array);
-        lods[0].fadeTransitionWidth = 0.9f;
-        gridChunkGoCollection[chunk].GetComponent<LODGroup>().SetLODs(lods);
-        gridChunkGoCollection[chunk].GetComponent<LODGroup>().RecalculateBounds();
-        gridChunkGoCollection[chunk].GetComponent<LODGroup>().fadeMode = LODFadeMode.CrossFade;
-    }
-
-    public void GridGrassAdd(GridPoint gp, Grass grass, bool doMeshGen = true) {
-        Chunk chunk = GpToChunk(gp);
-        GridGrassRemove(gp, doMeshGen);
-        dataManager.TryAddGrassPlacedList(chunk);
-        dataManager.GrassPlaced[chunk].Add(new GrassPlaced() { grass = grass, gp = gp });
-        if (doMeshGen) { GridGrassMeshGen(chunk, grass); }
-        //GrassGenTexture();
-    }
-
-    public void GridGrassRemove(GridPoint gp, bool doMeshGen = true) {
-        Chunk chunk = GpToChunk(gp);
-        if (dataManager.GrassPlaced.ContainsKey(chunk)) {
-            for (int i = dataManager.GrassPlaced[chunk].Count - 1; i >= 0; i--) {
-                GrassPlaced entry = dataManager.GrassPlaced[chunk][i];
-                if (entry.gp == gp) {
-                    dataManager.GrassPlaced[chunk].Remove(entry);
-                    if (doMeshGen) { GridGrassMeshGen(chunk, entry.grass); }
-                    dataManager.TryRemoveGrassPlacedList(chunk);
-                }
-            }
-        }
-    }
-
-    void GridGrassAutoGen(GridPoint[,] grid, Grass grass, float heightMin = 0, float heightMax = 999, float angleMin = 0, float angleMax = 10.0f) {
-        Debug.Log("Generating grass #" + grass.id);
-        //Grass grass = dataManager.Grass[grassId]; 
-        int count = 0;
-        for (int x = 0; x < grid.GetLength(0); x++) {
-            for (int z = 0; z < grid.GetLength(1); z++) {
-                if (grid[x, z].inBounds && (grid[x, z].posCenter.y >= heightMin && grid[x, z].posCenter.y < heightMax) && (grid[x, z].angleCenter >= angleMin && grid[x, z].angleCenter < angleMax)) {
-                    GridGrassAdd(Grid[x, z], grass, false);
-                    count++;
-                }
-            }
-        }
-        Debug.Log("Added " + count + " grass entries");
-    }
-
-    void GridGrassMeshGenAll() {
-        foreach (Chunk chunk in ChunkGrid) {
-            if (dataManager.GrassPlaced.ContainsKey(chunk)) {
-                foreach (GrassPlaced entry in dataManager.GrassPlaced[chunk].GroupBy(r => r.grass.id).Select(r => new List<GrassPlaced>(r)[0]).ToList()) {
-                    GridGrassMeshGen(chunk, entry.grass);
-                }
-            }
-        }
-    }
-
-    void GridGrassMeshGen(Chunk chunk, Grass grass) {
-        Debug.Log("Generating mesh for chunk #" + chunk.x.ToString("D4") + "x" + chunk.z.ToString("D4") + " - grass #" + grass.id.ToString("D4"));
-        if (!dataManager.GrassPlaced[chunk].Exists(r => r.grass == grass)) {
-            TryRemoveGrassGo(chunk, grass);
-        } else {
-            TryAddGrassGo(chunk, grass);
-            //grassLod1GoCollection[chunk][grass].GetComponent<MeshFilter>().mesh = MeshGen.Create(MeshGen.MakeTerrainListGrass(Grid, dataManager.GrassPlaced[chunk].FindAll(r => r.grass == grass)));
-            grassLod0GoCollection[chunk][grass].GetComponent<MeshFilter>().mesh = GrassMeshGen.Create(grass, MeshGen.Create(MeshGen.MakeTerrainListGrass(Grid, dataManager.GrassPlaced[chunk].FindAll(r => r.grass == grass))));
-            GridGrassChunkUpdateLods(chunk);
-
-
-            Debug.Log("Generated " + dataManager.GrassPlaced[chunk].FindAll(r => r.grass == grass).Count + " grass meshes");
-        }
-    }
-    void GrassGenTexture() {
-        Texture2D texture = Resources.Load<Texture2D>("Terrain/" + TerrainId.ToString("D2") + "/" + TerrainId.ToString("D2") + "-texture");
-        int texH = texture.height;
-        int texW = texture.width;
-        Texture2D grassTex = new Texture2D(texW, texH, TextureFormat.RGBA32, false);
-
-        Color fillColor = Color.clear;
-        Color[] fillPixels = new Color[texW * texH];
-        for (int i = 0; i < fillPixels.Length; i++) {
-            fillPixels[i] = fillColor;
-        }
-        grassTex.SetPixels(fillPixels);
-
-        foreach (Chunk chunk in ChunkGrid) {
-            if (dataManager.GrassPlaced.ContainsKey(chunk)) {
-                foreach (GrassPlaced entry in dataManager.GrassPlaced[chunk]) {
-                    Material mat = Resources.Load<Material>("Grass/" + entry.grass.mat);
-                    //Texture noiseA = mat.GetTexture("_NoiseATexture");
-                    //Texture noiseB = mat.GetTexture("_NoiseBTexture");
-                    Texture2D noiseA = Resources.Load<Texture2D>("GrassNoise01");
-                    Texture2D noiseB = Resources.Load<Texture2D>("GrassNoise02");
-                    float noiseScaleA = mat.GetFloat("_NoiseAScale");
-                    float noiseScaleB = mat.GetFloat("_NoiseBScale");
-                    float noiseBoostA = mat.GetFloat("_NoiseABoost");
-                    float noiseBoostB = mat.GetFloat("_NoiseBBoost");
-
-                    Color colorBase = mat.GetColor("_BaseColor");
-                    Color colorTop = mat.GetColor("_TopColor");
-                    int xStart = Mathf.FloorToInt(entry.gp.uv[2].x * texW);
-                    int yStart = Mathf.FloorToInt(entry.gp.uv[2].y * texH);
-                    int xEnd = Mathf.FloorToInt(entry.gp.uv[1].x * texW);
-                    int yEnd = Mathf.FloorToInt(entry.gp.uv[1].y * texH);
-                    for (int x = xStart; x < xEnd; x++) {
-                        for (int y = yStart; y < yEnd; y++) {
-                            Color noiseSampleA = noiseA.GetPixel(x, y);
-                            Color noiseSampleB = noiseB.GetPixel(x, y);
-                            
-
-                            float sampleFloatA = ((noiseSampleA.r + noiseSampleA.g + noiseSampleA.b) / 3) + noiseBoostA;
-                            float sampleFloatB = ((noiseSampleB.r + noiseSampleB.g + noiseSampleB.b) / 3) + noiseBoostB;
-
-                            //sampleFloatA = 1 - (1 - sampleFloatA) * noiseScaleA;
-                            //sampleFloatB = 1 - (1 - sampleFloatB) * noiseScaleB;
-                            sampleFloatA = 1 - (1 - sampleFloatA) * noiseScaleA;
-                            sampleFloatB = 1 - (1 - sampleFloatB) * noiseScaleB;
-
-                            float sampleFloatResult = sampleFloatA * sampleFloatB;
-
-                            //Debug.Log("A:" + sampleFloatA);
-                            //Debug.Log("B:" + sampleFloatB);
-                            Debug.Log("Noise:" + sampleFloatResult);
-
-                            Color colorMix = new Color();
-                            //if (Random.Range(0.0f, 1.0f) < 0.05f) { colorMix = Color.Lerp(colorBase, colorTop, Random.Range(.05f, .55f)); } else { colorMix = Color.Lerp(colorBase, colorTop, Random.Range(.20f, .30f)); }
-                            //if (Random.Range(0.0f, 1.0f) < 0.05f) { colorMix.a = Random.Range(.15f, .5f); } else { colorMix.a = Random.Range(.85f, .99f); }
-                            colorMix = Color.Lerp(colorBase, colorTop, sampleFloatResult);
-                            if (sampleFloatResult < 0) { colorMix.a = 0; }
-                            grassTex.SetPixel(x, y, colorMix);
-                        }
-                    }
-                }
-            }
-        }
-
-        grassTex.Apply();
-        grassTex.filterMode = FilterMode.Point;
-
-        byte[] bytes = grassTex.EncodeToPNG();
-        var dirPath = Application.dataPath + "/Resources/Terrain/" + TerrainId.ToString("D2") + "/";
-        if (!Directory.Exists(dirPath)) {
-            Directory.CreateDirectory(dirPath);
-        }
-        File.WriteAllBytes(dirPath + TerrainId.ToString("D2")+ "-texture-grass" + ".png", bytes);
-
-        Material terrainMat = Resources.Load<Material>("Terrain/" + TerrainId.ToString("D2") + "/" + TerrainId.ToString("D2") + "-mat");
-        terrainMat.SetTexture("_GrassTex", grassTex);
-    }
-
-    void GridGrassChunkUpdateLods(Chunk chunk) {
-        List<Renderer> r0List = new List<Renderer>(); foreach (GameObject entry in grassLod0GoCollection[chunk].Values) { r0List.Add(entry.GetComponent<Renderer>()); }
-        //List<Renderer> r1List = new List<Renderer>(); foreach (GameObject entry in grassLod1GoCollection[chunk].Values) { r1List.Add(entry.GetComponent<Renderer>()); }
-        Renderer[] r0Array = r0List.ToArray();
-        //Renderer[] r1Array = r1List.ToArray();
-        LOD[] lods = new LOD[1];
-        lods[0] = new LOD(Mathf.Min(.60f, .02f + (dataManager.GrassPlaced[chunk].Count * .0050f)), r0Array);
-        //lods[1] = new LOD(Mathf.Min(.30f, .01f + (dataManager.GrassPlaced[chunk].Count * .0050f)), r1Array);
-        lods[0].fadeTransitionWidth = 0.50f;
-        //lods[1].fadeTransitionWidth = 0.75f;
-        grassChunkGoCollection[chunk].GetComponent<LODGroup>().SetLODs(lods);
-        grassChunkGoCollection[chunk].GetComponent<LODGroup>().RecalculateBounds();
-        grassChunkGoCollection[chunk].GetComponent<LODGroup>().fadeMode = LODFadeMode.CrossFade;
-    }
-
-
-
-    void TryAddGrassGo(Chunk chunk, Grass grass) {
-        TryAddGrassChunkGo(chunk);
-        if (!grassLod0GoCollection[chunk].ContainsKey(grass)) {
-            grassLod0GoCollection[chunk].Add(grass, new GameObject("grass #" + grass.id.ToString("D4"), typeof(MeshFilter), typeof(MeshRenderer)));
-            grassLod0GoCollection[chunk][grass].transform.SetParent(grassChunkGoCollection[chunk].transform);
-            grassLod0GoCollection[chunk][grass].transform.localPosition = new Vector3(0, 0, 0);
-            grassLod0GoCollection[chunk][grass].GetComponent<Renderer>().material = Resources.Load<Material>("Grass/" + grass.mat);
-            grassLod0GoCollection[chunk][grass].GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            /*
-            grassLod1GoCollection[chunk].Add(grass, new GameObject("LOD", typeof(MeshFilter), typeof(MeshRenderer)));
-            grassLod1GoCollection[chunk][grass].transform.SetParent(grassLod0GoCollection[chunk][grass].transform);
-            grassLod1GoCollection[chunk][grass].transform.localPosition = new Vector3(0, 0.1f, 0);
-            grassLod1GoCollection[chunk][grass].GetComponent<Renderer>().material = Resources.Load<Material>("Grass/" + grass.mat);
-            grassLod1GoCollection[chunk][grass].GetComponent<Renderer>().material.EnableKeyword("USE_LOD_MODE");
-            grassLod1GoCollection[chunk][grass].GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            */
-        }
-    }
-
-    void TryRemoveGrassGo(Chunk chunk, Grass grass) {
-        if (!dataManager.GrassPlaced[chunk].Exists(r => r.grass == grass)) {
-            Destroy(grassLod0GoCollection[chunk][grass]);
-            grassLod0GoCollection[chunk].Remove(grass);
-            //Destroy(grassLod1GoCollection[chunk][grass]);
-            //grassLod1GoCollection[chunk].Remove(grass);
-        }
-        TryRemoveGrassChunkGo(chunk);
-    }
-
-    void TryAddGrassChunkGo(Chunk chunk) {
-        if (!grassLod0GoCollection.ContainsKey(chunk)) {
-            grassLod0GoCollection.Add(chunk, new Dictionary<Grass, GameObject>());
-            //grassLod1GoCollection.Add(chunk, new Dictionary<Grass, GameObject>());
-            grassChunkGoCollection.Add(chunk, new GameObject("chunk: #" + chunk.x.ToString("D4") + "x" + chunk.z.ToString("D4"), typeof(LODGroup)));
-            grassChunkGoCollection[chunk].transform.SetParent(grassGo.transform);
-            grassChunkGoCollection[chunk].transform.localPosition = new Vector3(0, 0, 0);
-        }
-    }
-
-    void TryRemoveGrassChunkGo(Chunk chunk) {
-        if (grassLod0GoCollection.ContainsKey(chunk)) {
-            if (grassLod0GoCollection[chunk].Count == 0) {
-                Destroy(grassChunkGoCollection[chunk]);
-                grassChunkGoCollection.Remove(chunk);
-                grassLod0GoCollection.Remove(chunk);
-                //grassLod1GoCollection.Remove(chunk);
-            }
-        }
     }
 
     void TerrainMeshGen() {
+        Debug.Log("Generating terrain mesh");
         foreach (Chunk chunk in ChunkGrid) {
             TerrainChunkMeshGen(chunk);
         }
+        Debug.Log("Generated mesh for " + ChunkGrid.GetLength(0) * ChunkGrid.GetLength(1) + " chunks");
     }
 
     void TerrainChunkMeshGen(Chunk chunk) {
+        //Generate meshes
         Mesh meshLod0 = MeshGen.Create(MeshGen.MakeTerrainChunk(Grid, chunk));
-        Mesh meshLod1 = MeshGen.Create(MeshGen.MakeTerrainChunkLod(Grid, chunk,lod1Size));
-        Mesh meshLod2 = MeshGen.Create(MeshGen.MakeTerrainChunkLod(Grid, chunk,lod2Size));
-        Mesh meshLod3 = MeshGen.Create(MeshGen.MakeTerrainChunkLod(Grid, chunk,lod3Size));
-        Mesh meshLod4 = MeshGen.Create(MeshGen.MakeTerrainChunkLod(Grid, chunk,lod4Size));
-
-        terrainChunkGoCollection.Add(chunk, new GameObject("chunk: #" + chunk.x.ToString("D4") + "x" + chunk.z.ToString("D4"), typeof(LODGroup)));
+        Mesh meshLod1 = MeshGen.Create(MeshGen.MakeTerrainChunkLod(Grid, chunk, lod1Size));
+        Mesh meshLod2 = MeshGen.Create(MeshGen.MakeTerrainChunkLod(Grid, chunk, lod2Size));
+        Mesh meshLod3 = MeshGen.Create(MeshGen.MakeTerrainChunkLod(Grid, chunk, lod3Size));
+        Mesh meshLod4 = MeshGen.Create(MeshGen.MakeTerrainChunkLod(Grid, chunk, lod4Size));
+        //Chunk GO
+        terrainChunkGoCollection.Add(chunk, new GameObject("CHUNK " + chunk.x.ToString("D4") + "x" + chunk.z.ToString("D4"), typeof(LODGroup)));
         terrainChunkGoCollection[chunk].transform.SetParent(terrainGo.transform);
         terrainChunkGoCollection[chunk].transform.localPosition = new Vector3(0, 0, 0);
-
-        terrainLod0GoCollection.Add(chunk, new GameObject("lod0", typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider)));
+        //LOD0
+        terrainLod0GoCollection.Add(chunk, new GameObject("LOD0", typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider)));
         terrainLod0GoCollection[chunk].transform.SetParent(terrainChunkGoCollection[chunk].transform);
         terrainLod0GoCollection[chunk].transform.localPosition = new Vector3(0, 0, 0);
         terrainLod0GoCollection[chunk].GetComponent<MeshFilter>().sharedMesh = meshLod0;
         terrainLod0GoCollection[chunk].GetComponent<MeshCollider>().sharedMesh = meshLod0;
         terrainLod0GoCollection[chunk].GetComponent<Renderer>().material = Resources.Load<Material>("Terrain/" + TerrainId.ToString("D2") + "/" + TerrainId.ToString("D2") + "-mat");
         terrainLod0GoCollection[chunk].GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-
-        terrainLod1GoCollection.Add(chunk, new GameObject("lod1", typeof(MeshFilter), typeof(MeshRenderer)));
+        //LOD1
+        terrainLod1GoCollection.Add(chunk, new GameObject("LOD1", typeof(MeshFilter), typeof(MeshRenderer)));
         terrainLod1GoCollection[chunk].transform.SetParent(terrainChunkGoCollection[chunk].transform);
         terrainLod1GoCollection[chunk].transform.localPosition = new Vector3(0, 0, 0);
         terrainLod1GoCollection[chunk].GetComponent<MeshFilter>().sharedMesh = meshLod1;
         terrainLod1GoCollection[chunk].GetComponent<Renderer>().material = Resources.Load<Material>("Terrain/" + TerrainId.ToString("D2") + "/" + TerrainId.ToString("D2") + "-mat");
         terrainLod1GoCollection[chunk].GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-
-        terrainLod2GoCollection.Add(chunk, new GameObject("lod2", typeof(MeshFilter), typeof(MeshRenderer)));
+        //LOD2
+        terrainLod2GoCollection.Add(chunk, new GameObject("LOD2", typeof(MeshFilter), typeof(MeshRenderer)));
         terrainLod2GoCollection[chunk].transform.SetParent(terrainChunkGoCollection[chunk].transform);
         terrainLod2GoCollection[chunk].transform.localPosition = new Vector3(0, 0, 0);
         terrainLod2GoCollection[chunk].GetComponent<MeshFilter>().sharedMesh = meshLod2;
         terrainLod2GoCollection[chunk].GetComponent<Renderer>().material = Resources.Load<Material>("Terrain/" + TerrainId.ToString("D2") + "/" + TerrainId.ToString("D2") + "-mat");
         terrainLod2GoCollection[chunk].GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-
-        terrainLod3GoCollection.Add(chunk, new GameObject("lod3", typeof(MeshFilter), typeof(MeshRenderer)));
+        //LOD3
+        terrainLod3GoCollection.Add(chunk, new GameObject("LOD3", typeof(MeshFilter), typeof(MeshRenderer)));
         terrainLod3GoCollection[chunk].transform.SetParent(terrainChunkGoCollection[chunk].transform);
         terrainLod3GoCollection[chunk].transform.localPosition = new Vector3(0, 0, 0);
         terrainLod3GoCollection[chunk].GetComponent<MeshFilter>().sharedMesh = meshLod3;
         terrainLod3GoCollection[chunk].GetComponent<Renderer>().material = Resources.Load<Material>("Terrain/" + TerrainId.ToString("D2") + "/" + TerrainId.ToString("D2") + "-mat");
         terrainLod3GoCollection[chunk].GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-
-        terrainLod4GoCollection.Add(chunk, new GameObject("lod4", typeof(MeshFilter), typeof(MeshRenderer)));
+        //LOD4
+        terrainLod4GoCollection.Add(chunk, new GameObject("LOD4", typeof(MeshFilter), typeof(MeshRenderer)));
         terrainLod4GoCollection[chunk].transform.SetParent(terrainChunkGoCollection[chunk].transform);
         terrainLod4GoCollection[chunk].transform.localPosition = new Vector3(0, 0, 0);
         terrainLod4GoCollection[chunk].GetComponent<MeshFilter>().sharedMesh = meshLod4;
         terrainLod4GoCollection[chunk].GetComponent<Renderer>().material = Resources.Load<Material>("Terrain/" + TerrainId.ToString("D2") + "/" + TerrainId.ToString("D2") + "-mat");
         terrainLod4GoCollection[chunk].GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-
         TerrainChunkUpdateLods(chunk);
     }
 
@@ -626,5 +349,219 @@ public class TerrainManager : MonoBehaviour {
         terrainChunkGoCollection[chunk].GetComponent<LODGroup>().SetLODs(lods);
         terrainChunkGoCollection[chunk].GetComponent<LODGroup>().RecalculateBounds();
         terrainChunkGoCollection[chunk].GetComponent<LODGroup>().fadeMode = LODFadeMode.CrossFade;
+    }
+
+    void GridMeshGen(float angle) {
+        Debug.Log("Generating grid mesh");
+        foreach (Chunk chunk in ChunkGrid) {
+            //Chunk GO
+            gridChunkGoCollection.Add(chunk, new GameObject("CHUNK " + chunk.x.ToString("D4") + "x" + chunk.z.ToString("D4"), typeof(LODGroup)));
+            gridChunkGoCollection[chunk].transform.SetParent(gridGo.transform);
+            gridChunkGoCollection[chunk].transform.localPosition = new Vector3(0, 0, 0);
+            //Grid
+            gridGoCollection.Add(chunk, new GameObject("Grid", typeof(MeshFilter), typeof(MeshRenderer)));
+            gridGoCollection[chunk].transform.SetParent(gridChunkGoCollection[chunk].transform);
+            gridGoCollection[chunk].transform.localPosition = new Vector3(0, 0, 0);
+            gridGoCollection[chunk].GetComponent<Renderer>().material = Resources.Load<Material>("Materials/unlitTrans");
+            gridGoCollection[chunk].GetComponent<Renderer>().material.color = new Color(.8f, .8f, .8f, .3f);
+            gridGoCollection[chunk].GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            gridGoCollection[chunk].GetComponent<MeshFilter>().mesh = MeshGen.Create(MeshGen.MakeTerrainGridChunk(Grid, chunk, angle));
+            //Grid steep
+            gridSteepGoCollection.Add(chunk, new GameObject("Grid-steep", typeof(MeshFilter), typeof(MeshRenderer)));
+            gridSteepGoCollection[chunk].transform.SetParent(gridChunkGoCollection[chunk].transform);
+            gridSteepGoCollection[chunk].transform.localPosition = new Vector3(0, 0.15f, 0);
+            gridSteepGoCollection[chunk].GetComponent<Renderer>().material = Resources.Load<Material>("Materials/unlitTrans");
+            gridSteepGoCollection[chunk].GetComponent<Renderer>().material.color = new Color(0.8867924f, 0.1296724f, 0.1296724f, 0.6f);
+            gridSteepGoCollection[chunk].GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            gridSteepGoCollection[chunk].GetComponent<MeshFilter>().mesh = MeshGen.Create(MeshGen.MakeTerrainGridChunk(Grid, chunk, angle, true, 1.5f));
+            GridChunkUpdateLods(chunk);
+        }
+        Debug.Log("Generated " + Grid.GetLength(0) * Grid.GetLength(1) + " grid point meshes");
+    }
+    void GridChunkUpdateLods(Chunk chunk) {
+        List<Renderer> r0List = new List<Renderer>();
+        if (gridGoCollection.ContainsKey(chunk)) { r0List.Add(gridGoCollection[chunk].GetComponent<Renderer>()); }
+        if (gridSteepGoCollection.ContainsKey(chunk)) { r0List.Add(gridSteepGoCollection[chunk].GetComponent<Renderer>()); }
+        Renderer[] r0Array = r0List.ToArray();
+        r0Array[0] = gridGoCollection[chunk].GetComponent<Renderer>();
+        LOD[] lods = new LOD[1];
+        lods[0] = new LOD(.6f, r0Array);
+        lods[0].fadeTransitionWidth = 0.5f;
+        gridChunkGoCollection[chunk].GetComponent<LODGroup>().SetLODs(lods);
+        gridChunkGoCollection[chunk].GetComponent<LODGroup>().RecalculateBounds();
+        gridChunkGoCollection[chunk].GetComponent<LODGroup>().fadeMode = LODFadeMode.CrossFade;
+    }
+
+    void GridGrassAutoGen(GridPoint[,] grid, Grass grass, float heightMin = 0, float heightMax = 999, float angleMin = 0, float angleMax = 10.0f) {
+        Debug.Log("Auto generating grass #" + grass.id);
+        int count = 0;
+        for (int x = 0; x < grid.GetLength(0); x++) {
+            for (int z = 0; z < grid.GetLength(1); z++) {
+                if (grid[x, z].inBounds && (grid[x, z].posCenter.y >= heightMin && grid[x, z].posCenter.y < heightMax) && (grid[x, z].angleCenter >= angleMin && grid[x, z].angleCenter < angleMax)) {
+                    GridGrassAdd(Grid[x, z], grass, false);
+                    count++;
+                }
+            }
+        }
+        Debug.Log("Added " + count + " grass entries");
+    }
+
+    public void GridGrassAdd(GridPoint gp, Grass grass, bool doMeshGen = true) {
+        Chunk chunk = GpToChunk(gp);
+        GridGrassRemove(gp, doMeshGen);
+        dataManager.TryAddGrassPlacedList(chunk);
+        dataManager.GrassPlaced[chunk].Add(new GrassPlaced() { grass = grass, gp = gp });
+        if (doMeshGen) { GridGrassMeshGen(chunk, grass); }
+    }
+
+    public void GridGrassRemove(GridPoint gp, bool doMeshGen = true) {
+        Chunk chunk = GpToChunk(gp);
+        if (dataManager.GrassPlaced.ContainsKey(chunk)) {
+            for (int i = dataManager.GrassPlaced[chunk].Count - 1; i >= 0; i--) {
+                GrassPlaced entry = dataManager.GrassPlaced[chunk][i];
+                if (entry.gp == gp) {
+                    dataManager.GrassPlaced[chunk].Remove(entry);
+                    if (doMeshGen) { GridGrassMeshGen(chunk, entry.grass); }
+                    dataManager.TryRemoveGrassPlacedList(chunk);
+                }
+            }
+        }
+    }
+
+    void TryAddGrassGo(Chunk chunk, Grass grass) {
+        TryAddGrassChunkGo(chunk);
+        if (!grassLod0GoCollection[chunk].ContainsKey(grass)) {
+            grassLod0GoCollection[chunk].Add(grass, new GameObject("Grass #" + grass.id.ToString("D4"), typeof(MeshFilter), typeof(MeshRenderer)));
+            grassLod0GoCollection[chunk][grass].transform.SetParent(grassChunkGoCollection[chunk].transform);
+            grassLod0GoCollection[chunk][grass].transform.localPosition = new Vector3(0, 0, 0);
+            grassLod0GoCollection[chunk][grass].GetComponent<Renderer>().material = Resources.Load<Material>("Grass/" + grass.mat);
+            grassLod0GoCollection[chunk][grass].GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        }
+    }
+
+    void TryRemoveGrassGo(Chunk chunk, Grass grass) {
+        if (!dataManager.GrassPlaced[chunk].Exists(r => r.grass == grass)) {
+            Destroy(grassLod0GoCollection[chunk][grass]);
+            grassLod0GoCollection[chunk].Remove(grass);
+        }
+        TryRemoveGrassChunkGo(chunk);
+    }
+
+    void TryAddGrassChunkGo(Chunk chunk) {
+        if (!grassLod0GoCollection.ContainsKey(chunk)) {
+            grassLod0GoCollection.Add(chunk, new Dictionary<Grass, GameObject>());
+            grassChunkGoCollection.Add(chunk, new GameObject("CHUNK " + chunk.x.ToString("D4") + "x" + chunk.z.ToString("D4"), typeof(LODGroup)));
+            grassChunkGoCollection[chunk].transform.SetParent(grassGo.transform);
+            grassChunkGoCollection[chunk].transform.localPosition = new Vector3(0, 0, 0);
+        }
+    }
+
+    void TryRemoveGrassChunkGo(Chunk chunk) {
+        if (grassLod0GoCollection.ContainsKey(chunk)) {
+            if (grassLod0GoCollection[chunk].Count == 0) {
+                Destroy(grassChunkGoCollection[chunk]);
+                grassChunkGoCollection.Remove(chunk);
+                grassLod0GoCollection.Remove(chunk);
+            }
+        }
+    }
+
+    void GridGrassMeshGenAll() {
+        foreach (Chunk chunk in ChunkGrid) {
+            if (dataManager.GrassPlaced.ContainsKey(chunk)) {
+                foreach (GrassPlaced entry in dataManager.GrassPlaced[chunk].GroupBy(r => r.grass.id).Select(r => new List<GrassPlaced>(r)[0]).ToList()) {
+                    GridGrassMeshGen(chunk, entry.grass);
+                }
+            }
+        }
+    }
+
+    void GridGrassMeshGen(Chunk chunk, Grass grass) {
+        Debug.Log("Generating mesh for chunk #" + chunk.x.ToString("D4") + "x" + chunk.z.ToString("D4") + " - grass #" + grass.id.ToString("D4"));
+        if (!dataManager.GrassPlaced[chunk].Exists(r => r.grass == grass)) {
+            TryRemoveGrassGo(chunk, grass);
+        } else {
+            TryAddGrassGo(chunk, grass);
+            grassLod0GoCollection[chunk][grass].GetComponent<MeshFilter>().mesh = GrassMeshGen.Create(grass, MeshGen.Create(MeshGen.MakeTerrainListGrass(Grid, dataManager.GrassPlaced[chunk].FindAll(r => r.grass == grass))));
+            GridGrassChunkUpdateLods(chunk);
+            Debug.Log("Generated " + dataManager.GrassPlaced[chunk].FindAll(r => r.grass == grass).Count + " grass meshes");
+        }
+    }
+
+    void GridGrassChunkUpdateLods(Chunk chunk) {
+        List<Renderer> r0List = new List<Renderer>(); foreach (GameObject entry in grassLod0GoCollection[chunk].Values) { r0List.Add(entry.GetComponent<Renderer>()); }
+        Renderer[] r0Array = r0List.ToArray();
+        LOD[] lods = new LOD[1];
+        lods[0] = new LOD(Mathf.Min(.50f, .02f + (dataManager.GrassPlaced[chunk].Count * .0050f)), r0Array);
+        lods[0].fadeTransitionWidth = 0.50f;
+        grassChunkGoCollection[chunk].GetComponent<LODGroup>().SetLODs(lods);
+        grassChunkGoCollection[chunk].GetComponent<LODGroup>().RecalculateBounds();
+        grassChunkGoCollection[chunk].GetComponent<LODGroup>().fadeMode = LODFadeMode.CrossFade;
+    }
+
+    public void GrassGenTexture() {
+        Debug.Log("Generating grass terrain texture");
+        Material terrainMat = Resources.Load<Material>("Terrain/" + TerrainId.ToString("D2") + "/" + TerrainId.ToString("D2") + "-mat");
+        Texture2D terrainTex = terrainMat.GetTexture("_MainTex") as Texture2D;
+        int texH = terrainTex.height;
+        int texW = terrainTex.width;
+        Texture2D grassTex = new Texture2D(texW, texH, TextureFormat.RGBA32, false);
+        //Fill grass texture with transparency
+        Color[] fillPixels = new Color[texW * texH];
+        for (int i = 0; i < fillPixels.Length; i++) {
+            fillPixels[i] = Color.clear;
+        }
+        grassTex.SetPixels(fillPixels);
+        //Set grass texture pixels from grass material
+        int count = 0;
+        foreach (Chunk chunk in ChunkGrid) {
+            if (dataManager.GrassPlaced.ContainsKey(chunk)) {
+                foreach (GrassPlaced entry in dataManager.GrassPlaced[chunk]) {
+                    Material mat = Resources.Load<Material>("Grass/" + entry.grass.mat);
+                    Texture2D noiseA = mat.GetTexture("_NoiseATexture") as Texture2D;
+                    Texture2D noiseB = mat.GetTexture("_NoiseBTexture") as Texture2D;
+                    float noiseScaleA = mat.GetFloat("_NoiseAScale");
+                    float noiseScaleB = mat.GetFloat("_NoiseBScale");
+                    float noiseBoostA = mat.GetFloat("_NoiseABoost");
+                    float noiseBoostB = mat.GetFloat("_NoiseBBoost");
+                    Color colorBase = mat.GetColor("_BaseColor");
+                    Color colorTop = mat.GetColor("_TopColor");
+                    int xStart = Mathf.FloorToInt(entry.gp.uv[2].x * texW);
+                    int yStart = Mathf.FloorToInt(entry.gp.uv[2].y * texH);
+                    int xEnd = Mathf.FloorToInt(entry.gp.uv[1].x * texW);
+                    int yEnd = Mathf.FloorToInt(entry.gp.uv[1].y * texH);
+                    for (int x = xStart; x < xEnd; x++) {
+                        for (int y = yStart; y < yEnd; y++) {
+                            Color noiseSampleA = noiseA.GetPixel(x, y);
+                            Color noiseSampleB = noiseB.GetPixel(x, y);
+                            float sampleFloatA = ((noiseSampleA.r + noiseSampleA.g + noiseSampleA.b) / 3) + noiseBoostA;
+                            float sampleFloatB = ((noiseSampleB.r + noiseSampleB.g + noiseSampleB.b) / 3) + noiseBoostB;
+                            sampleFloatA = 1 - (1 - sampleFloatA) * noiseScaleA;
+                            sampleFloatB = 1 - (1 - sampleFloatB) * noiseScaleB;
+                            float sampleFloatResult = sampleFloatA * sampleFloatB;
+                            Color colorMix = new Color();
+                            colorMix = Color.Lerp(colorBase, colorTop, sampleFloatResult);
+                            if (sampleFloatResult < 0) { colorMix.a = 0; }
+                            grassTex.SetPixel(x, y, colorMix);
+                            count++;
+                        }
+                    }
+                }
+            }
+        }
+        //Apply pixels to texture
+        grassTex.Apply();
+        //grassTex.filterMode = FilterMode.Point;
+        //Save grass texture to file
+        byte[] bytes = grassTex.EncodeToPNG();
+        var dirPath = Application.dataPath + "/Resources/Terrain/" + TerrainId.ToString("D2") + "/";
+        if (!Directory.Exists(dirPath)) {
+            Directory.CreateDirectory(dirPath);
+        }
+        File.WriteAllBytes(dirPath + TerrainId.ToString("D2")+ "-texture-grass" + ".png", bytes);
+        //Apply grass texture to terrain mat
+        AssetDatabase.Refresh();
+        terrainMat.SetTexture("_GrassTex", Resources.Load<Texture>("Terrain/" + TerrainId.ToString("D2") + "/" + TerrainId.ToString("D2") + "-texture-grass"));
+        Debug.Log(count + " pixel grass texture generated");
     }
 }

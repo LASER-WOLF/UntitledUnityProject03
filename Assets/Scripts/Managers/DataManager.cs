@@ -15,7 +15,7 @@ public class DataManager : MonoBehaviour {
 
     //add grassmat list
     Dictionary<Chunk, List<GrassPlaced>> _grassPlaced = new Dictionary<Chunk, List<GrassPlaced>>();
-    Dictionary<GridPoint, int> _unitsPlaced = new Dictionary<GridPoint, int>();
+    Dictionary<GridPoint, Unit> _unitsPlaced = new Dictionary<GridPoint, Unit>();
 
     public Dictionary<int, Grass> Grass {
         get => _grass;
@@ -37,7 +37,7 @@ public class DataManager : MonoBehaviour {
         set => _grassPlaced = value;
     }
 
-    public Dictionary<GridPoint, int> UnitsPlaced {
+    public Dictionary<GridPoint, Unit> UnitsPlaced {
         get => _unitsPlaced;
         set => _unitsPlaced = value;
     }
@@ -64,11 +64,6 @@ public class DataManager : MonoBehaviour {
     Dictionary<int, Grass> GrassInit() {
         Dictionary<int, Grass> grassEmpty = new Dictionary<int, Grass>();
         for (int x = 1; x <= _numEntities; x++) {
-
-            //temp
-            //grassEmpty.Add(x, new Grass() { id = x, mat = "grassDefault", settings = grassSettings });
-            string mat = "grass" + x.ToString("D4");
-
             grassEmpty.Add(x, new Grass() { id = x });
         }
         grassEmpty[1].mat = "grass0001";
@@ -76,59 +71,21 @@ public class DataManager : MonoBehaviour {
         grassEmpty[3].mat = "grass0003";
         grassEmpty[4].mat = "grass0004";
         grassEmpty[5].mat = "grass0005";
-
         grassEmpty[6].mat = "moss0001";
-        //grassEmpty[6].height = 0.25f;
-        //grassEmpty[6].numLayers = 5;
         grassEmpty[7].mat = "moss0002";
-        //grassEmpty[7].height = 0.25f;
-        //grassEmpty[7].numLayers = 5;
         grassEmpty[8].mat = "moss0003";
-        //grassEmpty[8].height = 0.25f;
-        //grassEmpty[8].numLayers = 5;
         grassEmpty[9].mat = "moss0004";
-        //grassEmpty[9].height = 0.25f;
-        //grassEmpty[9].numLayers = 5;
         grassEmpty[10].mat = "moss0005";
-        //grassEmpty[10].height = 0.25f;
-        //grassEmpty[10].numLayers = 5;
-
         grassEmpty[11].mat = "lava0001";
-        //grassEmpty[11].height = 0.25f;
-        //grassEmpty[11].numLayers = 5;
         grassEmpty[12].mat = "lava0002";
-        //grassEmpty[12].height = 0.25f;
-        //grassEmpty[12].numLayers = 5;
         grassEmpty[13].mat = "lava0003";
-        //grassEmpty[13].height = 0.25f;
-        //grassEmpty[13].numLayers = 5;
         grassEmpty[14].mat = "lava0004";
-        //grassEmpty[14].height = 0.25f;
-        //grassEmpty[14].numLayers = 5;
         grassEmpty[15].mat = "lava0005";
-        //grassEmpty[15].height = 0.25f;
-        //grassEmpty[15].numLayers = 5;
-
-
         grassEmpty[16].mat = "snow0001";
-        //grassEmpty[16].height = 0.25f;
-        //grassEmpty[16].numLayers = 5;
-
         grassEmpty[17].mat = "snow0002";
-        //grassEmpty[17].height = 0.25f;
-        //grassEmpty[17].numLayers = 5;
-
         grassEmpty[18].mat = "snow0003";
-        //grassEmpty[18].height = 0.25f;
-        //grassEmpty[18].numLayers = 5;
-
         grassEmpty[19].mat = "snow0004";
-        //grassEmpty[19].height = 0.25f;
-        //grassEmpty[19].numLayers = 5;
-
         grassEmpty[20].mat = "snow0005";
-        //grassEmpty[20].height = 0.25f;
-        //grassEmpty[20].numLayers = 5;
         return grassEmpty;
     }
 
